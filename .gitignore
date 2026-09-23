@@ -78,3 +78,17 @@ tests/storybook-visual/playwright-report/
 .vercel/
 .env.local
 test-results/
+
+# Repo-root HOME-style runtime state (created when HOME pointed at the repo root)
+# Never commit: caches, editor/agent local state, build output, local env
+.npm/
+.cache/
+.local/
+.config/
+.claude.json
+.claude/.credentials.json
+.claude/backups/
+.claude/projects/
+server/ui-dist/
+paperclip.env
+paperclip-dev.log

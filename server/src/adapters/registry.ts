@@ -71,6 +71,16 @@ import {
   models as geminiModels,
 } from "@paperclipai/adapter-gemini-local";
 import {
+  execute as geminiLiveExecute,
+  testEnvironment as geminiLiveTestEnvironment,
+  sessionCodec as geminiLiveSessionCodec,
+  getConfigSchema as getGeminiLiveConfigSchema,
+} from "@paperclipai/adapter-gemini-live/server";
+import {
+  agentConfigurationDoc as geminiLiveAgentConfigurationDoc,
+  models as geminiLiveModels,
+} from "@paperclipai/adapter-gemini-live";
+import {
   execute as grokExecute,
   listGrokSkills,
   syncGrokSkills,
@@ -718,6 +728,22 @@ const geminiLocalAdapter: ServerAdapterModule = {
   getConfigSchema: getGeminiConfigSchema,
 };
 
+const geminiLiveAdapter: ServerAdapterModule = {
+  type: "gemini_live",
+  runtimeToolDelivery: "invocation_context",
+  execute: geminiLiveExecute,
+  testEnvironment: geminiLiveTestEnvironment,
+  sessionCodec: geminiLiveSessionCodec,
+  sessionManagement: getAdapterSessionManagement("gemini_live") ?? undefined,
+  models: geminiLiveModels,
+  supportsLocalAgentJwt: true,
+  supportsInstructionsBundle: true,
+  instructionsPathKey: "instructionsFilePath",
+  requiresMaterializedRuntimeSkills: false,
+  agentConfigurationDoc: geminiLiveAgentConfigurationDoc,
+  getConfigSchema: getGeminiLiveConfigSchema,
+};
+
 const grokLocalAdapter: ServerAdapterModule = {
   type: "grok_local",
   runtimeToolDelivery: "environment",
@@ -851,6 +877,7 @@ function registerBuiltInAdapters() {
     cursorCloudAdapter,
     cursorLocalAdapter,
     geminiLocalAdapter,
+    geminiLiveAdapter,
     grokLocalAdapter,
     kimiLocalAdapter,
     hermesGatewayAdapter,

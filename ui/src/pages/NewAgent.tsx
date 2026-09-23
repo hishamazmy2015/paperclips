@@ -43,6 +43,7 @@ import { buildPermissionsForTrustPreset, getTrustPreset } from "../lib/trust-pol
 import { DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX } from "@paperclipai/adapter-codex-local";
 import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
 import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
+import { DEFAULT_GEMINI_LIVE_MODEL } from "@paperclipai/adapter-gemini-live";
 import { DEFAULT_KIMI_LOCAL_MODEL } from "@paperclipai/adapter-kimi-local";
 import { DEFAULT_OPENCODE_LOCAL_MODEL, isValidOpenCodeModelId } from "@paperclipai/adapter-opencode-local";
 
@@ -56,6 +57,8 @@ function createValuesForAdapterType(
       DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX;
   } else if (adapterType === "gemini_local") {
     nextValues.model = DEFAULT_GEMINI_LOCAL_MODEL;
+  } else if (adapterType === "gemini_live") {
+    nextValues.model = DEFAULT_GEMINI_LIVE_MODEL;
   } else if (adapterType === "kimi_local") {
     nextValues.model = DEFAULT_KIMI_LOCAL_MODEL;
   } else if (adapterType === "cursor") {

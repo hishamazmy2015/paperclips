@@ -32,6 +32,7 @@ export const AGENT_ADAPTER_TYPES = [
   "paperclip_runner",
   "cursor_cloud",
   "gemini_local",
+  "gemini_live",
   "grok_local",
   "hermes_gateway",
   "hermes_local",

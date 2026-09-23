@@ -91,6 +91,11 @@ const adapterDisplayMap: Record<string, AdapterDisplayInfo> = {
     description: "Gemini CLI harness",
     icon: Gem,
   },
+  gemini_live: {
+    label: "Gemini Live",
+    description: "Gemini Live API task execution (gemini-3.1-flash-live-preview)",
+    icon: Gem,
+  },
   grok_local: {
     label: "Grok Build",
     description: "Grok Build harness",
