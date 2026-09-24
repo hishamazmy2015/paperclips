@@ -1,0 +1,79 @@
+# AgentSites edge (spec §11). TEMPLATE — rendered by infra/scripts/render-caddy.sh into
+# infra/caddy/rendered/ (never edit the rendered copy). Dollar-brace tokens are substituted
+# at render time; {env.*} and {http.*} placeholders are Caddy's own and resolve at runtime,
+# so no secret is ever written to disk outside .env.
+{
+	email {env.ACME_EMAIL}
+	# Custom-domain certificates are issued on demand, but only for hosts the platform
+	# approves: Caddy asks the app first (internal loopback listener below, never published).
+	on_demand_tls {
+		ask http://127.0.0.1:9080/internal/tls/allow
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+# Everything a tenant or platform site needs: PHP through php-fpm in the app container,
+# static assets from the shared public/ mount, compression, baseline security headers.
+(platform_site) {
+	encode zstd gzip
+	root * /srv/platform/app/public
+	@internal path /internal/*
+	respond @internal 404
+	php_fastcgi app:9000
+	file_server
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+(cloudflare_dns) {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+}
+
+# Platform hosts (app., admin., api., cdn., staging.) and every tenant subdomain: one
+# wildcard certificate via Cloudflare DNS-01, so a new tenant needs no issuance at all.
+*.${PLATFORM_BASE_DOMAIN} {
+	import cloudflare_dns
+	import platform_site
+}
+
+# Apex: the landing page (S0) when the platform owns it. render-caddy.sh writes an empty
+# apex.caddy while the legacy platform still serves the apex (it is then in LEGACY_HOSTS).
+import /etc/caddy/apex.caddy
+
+# Legacy platform passthrough (hosts from DISCOVERY.md; empty file once retired).
+import /etc/caddy/legacy.caddy
+
+# Custom domains: on-demand TLS, allowed only when the ask endpoint says yes.
+https:// {
+	tls {
+		on_demand
+	}
+	import platform_site
+}
+
+# Internal listener for the on-demand TLS permission check. Loopback only, inside the
+# Caddy container: it is reachable from nowhere else.
+http://127.0.0.1:9080 {
+	bind 127.0.0.1
+	root * /srv/platform/app/public
+	@allow path /internal/tls/allow
+	handle @allow {
+		php_fastcgi app:9000
+	}
+	handle {
+		respond 404
+	}
+}

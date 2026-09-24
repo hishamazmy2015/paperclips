@@ -1,0 +1,16 @@
+# Secrets and per-instance state (spec §22.6): only .env.example is committed
+# (plus the value-free app/.env.testing that the test suite needs to exist).
+.env
+.env.*
+!.env.example
+!/app/.env.testing
+
+# Runtime data
+/media/
+/infra/caddy/rendered/
+
+# Phase 0 discovery output (contains the base domain and host details)
+/discovery-*.md
+
+*.log
+.DS_Store

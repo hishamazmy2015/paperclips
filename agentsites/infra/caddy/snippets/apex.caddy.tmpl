@@ -1,0 +1,5 @@
+# Apex site block — rendered only when the platform owns the apex (see render-caddy.sh).
+${PLATFORM_BASE_DOMAIN} {
+	import cloudflare_dns
+	import platform_site
+}

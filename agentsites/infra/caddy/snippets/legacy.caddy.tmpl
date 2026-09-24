@@ -1,0 +1,11 @@
+# Legacy platform passthrough — rendered only when LEGACY_HOSTS is set. The old platform
+# keeps serving these hosts unchanged (paths, headers, cookies); Caddy only terminates TLS.
+${LEGACY_HOSTS} {
+	import cloudflare_dns
+	encode zstd gzip
+	reverse_proxy ${LEGACY_UPSTREAM}
+	log {
+		output stdout
+		format json
+	}
+}

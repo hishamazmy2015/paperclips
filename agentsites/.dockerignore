@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+media
+infra/caddy/rendered
+app/vendor
+app/node_modules
+app/storage/logs
+docs
+samples

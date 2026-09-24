@@ -1,0 +1,123 @@
+# AgentSites platform — runtime packaging (spec §5, §7).
+# One codebase, one deployment, one database: tenants are rows, never containers.
+#
+# Ports: Caddy publishes ${CADDY_HTTP_PORT}/${CADDY_HTTPS_PORT} from .env. They stay off
+# 80/443 until the legacy-platform cutover is approved (docs/DISCOVERY.md, coexistence plan).
+#
+# Configuration: the single .env at the platform root is bind-mounted read-only into the PHP
+# containers (Laravel reads it at bootstrap), so `platform:domain:change` needs no container
+# recreate. Only Caddy and Postgres receive a handful of values through their environment.
+name: platform
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-app: &app
+  image: platform-app:local
+  restart: unless-stopped
+  logging: *logging
+  volumes:
+    - ./app:/srv/platform/app
+    - ./.env:/srv/platform/app/.env:ro
+    - ./media:/srv/platform/media
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  caddy:
+    image: platform-caddy:local
+    build:
+      context: infra/caddy
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+      - "${CADDY_HTTPS_PORT:-443}:443/udp"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # legacy platform upstream on the host
+    volumes:
+      - ./infra/caddy/rendered:/etc/caddy:ro
+      - ./app:/srv/platform/app:ro
+      - ./media:/srv/platform/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  app:
+    <<: *app
+    build:
+      context: .
+      dockerfile: infra/app/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  horizon:
+    <<: *app
+    user: "33:33"
+    command: ["php", "artisan", "horizon"]
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan horizon:status | grep -q running"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  scheduler:
+    <<: *app
+    user: "33:33"
+    command: ["php", "artisan", "schedule:work"]
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    shm_size: 256m
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-platform}
+      POSTGRES_USER: ${DB_USERNAME:-platform}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-platform} -d ${DB_DATABASE:-platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    # noeviction: queue jobs must never be dropped under memory pressure; AOF for durability.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction", "--save", "60", "1000"]
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres:
+  redis:
+  caddy_data:
+  caddy_config:

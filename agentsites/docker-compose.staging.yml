@@ -1,0 +1,15 @@
+# Staging overlay (spec §5, §18): adds Mailpit so no real email leaves staging.
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+# Staging runs from its own checkout and .env (APP_ENV=staging, MAIL_MAILER=smtp,
+# MAIL_HOST=mailpit, MAIL_PORT=1025, its own CADDY_* ports and DB password).
+services:
+  mailpit:
+    image: axllent/mailpit:v1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  app:
+    depends_on:
+      mailpit:
+        condition: service_started

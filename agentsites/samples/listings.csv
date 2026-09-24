@@ -1,0 +1,4 @@
+ref,title_en,title_ar,offering,property_type,price,currency,bedrooms,bathrooms,area_sqft,community,city,status,featured,description_en,description_ar,media
+FP-1001,2BR with Burj view in Downtown,شقة غرفتين بإطلالة على برج خليفة في داون تاون,sale,apartment,2450000,AED,2,2,1350,Downtown,Dubai,available,true,Bright two-bedroom apartment with full Burj Khalifa view.,شقة مشرقة بغرفتي نوم وإطلالة كاملة على برج خليفة.,https://example.com/media/fp-1001-1.jpg;https://example.com/media/fp-1001-2.jpg
+FP-1002,Marina studio for rent,استوديو للإيجار في المارينا,rent,studio,72000,AED,0,1,480,Marina,Dubai,available,false,Furnished studio steps from the promenade.,استوديو مفروش على بعد خطوات من الممشى.,https://example.com/media/fp-1002-1.jpg
+FP-1003,4BR villa in Dubai Hills,فيلا 4 غرف في دبي هيلز,sale,villa,7900000,AED,4,5,4200,Dubai Hills,Dubai,available,true,Corner villa on the park with a private pool.,فيلا زاوية على الحديقة مع مسبح خاص.,

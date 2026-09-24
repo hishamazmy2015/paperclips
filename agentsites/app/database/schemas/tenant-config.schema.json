@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agentsites:tenant-config:1",
+  "title": "Tenant configuration (spec §9)",
+  "description": "Stored in tenants.config. Defaults for every optional field live in config/tenant-defaults.php and are merged at read time, never stored. A config with only identity.display_name and contact.whatsapp must render a full site.",
+  "type": "object",
+  "required": ["identity", "contact"],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["display_name"],
+      "properties": {
+        "display_name": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "agency_name": { "type": "string", "maxLength": 120 },
+        "license_no": { "type": "string", "maxLength": 40 },
+        "brn": { "type": "string", "maxLength": 40 },
+        "photo": { "type": "string", "format": "uri-reference" },
+        "logo": { "type": "string", "format": "uri-reference" },
+        "tagline": { "$ref": "#/$defs/localized" },
+        "bio": { "$ref": "#/$defs/localized" },
+        "languages": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "years_experience": { "type": "integer", "minimum": 0, "maximum": 60 }
+      },
+      "additionalProperties": false
+    },
+    "contact": {
+      "type": "object",
+      "required": ["whatsapp"],
+      "properties": {
+        "whatsapp": { "type": "string", "pattern": "^\\+[1-9][0-9]{7,14}$" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "office_address": { "type": "string" },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lng": { "type": "number", "minimum": -180, "maximum": 180 },
+        "socials": { "type": "object", "additionalProperties": { "type": "string", "format": "uri" } }
+      },
+      "additionalProperties": false
+    },
+    "branding": {
+      "type": "object",
+      "properties": {
+        "palette": { "type": "string", "enum": ["sand", "navy", "emerald", "charcoal", "rose", "gold", "custom"] },
+        "custom_palette": {
+          "type": "object",
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "secondary": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "background": { "$ref": "#/$defs/color" },
+            "text": { "$ref": "#/$defs/color" }
+          },
+          "additionalProperties": false
+        },
+        "font_pair": { "type": "string" },
+        "hero_image": { "type": "string" },
+        "dark_mode": { "enum": ["auto", "on", "off"] }
+      },
+      "additionalProperties": false
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "service_areas": { "type": "array", "items": { "type": "string" }, "maxItems": 20 },
+        "specialties": { "type": "array", "items": { "type": "string" } },
+        "about": { "$ref": "#/$defs/localized" },
+        "why_me": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "$ref": "#/$defs/localized" },
+              "text": { "$ref": "#/$defs/localized" },
+              "icon": { "type": "string" }
+            }
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "enabled"],
+            "properties": {
+              "key": { "enum": ["hero", "featured", "about", "areas", "testimonials", "services", "stats", "cta", "contact", "map", "instagram", "blog"] },
+              "enabled": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "listings": {
+      "type": "object",
+      "properties": {
+        "show_demo_until_real": { "type": "boolean", "default": true },
+        "sort": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "seo": {
+      "type": "object",
+      "properties": {
+        "title_pattern": { "type": "string" },
+        "meta_description": { "$ref": "#/$defs/localized" },
+        "og_image": { "type": "string" },
+        "gtag_id": { "type": "string" },
+        "meta_pixel_id": { "type": "string" },
+        "noindex": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "locale": {
+      "type": "object",
+      "properties": {
+        "default": { "enum": ["ar", "en"] },
+        "enabled": { "type": "array", "items": { "enum": ["ar", "en"] }, "uniqueItems": true, "minItems": 1 },
+        "currency": { "type": "string", "default": "AED" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localized": {
+      "type": "object",
+      "properties": {
+        "en": { "type": "string" },
+        "ar": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+  }
+}

@@ -1,0 +1,100 @@
+# AgentSites platform CI (spec §19). Lives at the repository root because GitHub only reads
+# workflows from here; everything it checks is under agentsites/.
+name: agentsites-ci
+
+on:
+  push:
+    paths:
+      - "agentsites/**"
+      - ".github/workflows/agentsites-ci.yml"
+  pull_request:
+    paths:
+      - "agentsites/**"
+      - ".github/workflows/agentsites-ci.yml"
+
+defaults:
+  run:
+    working-directory: agentsites
+
+jobs:
+  base-domain:
+    name: Base-domain gate (spec §4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The base domain may live only in .env / DISCOVERY.md
+        env:
+          PLATFORM_BASE_DOMAIN: ${{ vars.PLATFORM_BASE_DOMAIN }}
+        run: |
+          if [ -z "${PLATFORM_BASE_DOMAIN}" ]; then
+            echo "::error::Set the repository variable PLATFORM_BASE_DOMAIN (Settings → Secrets and variables → Actions → Variables). CI needs it the way the server needs .env."
+            exit 1
+          fi
+          bash infra/scripts/check-base-domain.sh
+
+  shell:
+    name: Shell scripts (shellcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+      - run: shellcheck -S warning infra/scripts/*.sh
+      - run: for f in infra/scripts/*.sh; do bash -n "$f"; done
+
+  runtime:
+    name: Compose + Caddyfile validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose config
+        env:
+          DB_PASSWORD: ci-only
+          ACME_EMAIL: ci@example.com
+        run: |
+          cp .env.example .env
+          docker compose config -q
+          docker compose -f docker-compose.yml -f docker-compose.staging.yml config -q
+      - name: Build Caddy with the Cloudflare module
+        run: docker build -t platform-caddy:ci infra/caddy
+      # The Cloudflare module checks the token's shape at provision time, so validation uses a
+      # well-formed dummy (40 token characters), never a real token.
+      - name: Render and validate (platform owns the apex)
+        env:
+          ENV_FILE: /nonexistent
+          PLATFORM_BASE_DOMAIN: example.com
+        run: |
+          infra/scripts/render-caddy.sh --out "$PWD/rendered-a"
+          docker run --rm -v "$PWD/rendered-a:/etc/caddy:ro" -v "$PWD/app:/srv/platform/app:ro" \
+            -e ACME_EMAIL=ci@example.com -e CLOUDFLARE_API_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+            platform-caddy:ci caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Render and validate (legacy platform keeps the apex)
+        env:
+          ENV_FILE: /nonexistent
+          PLATFORM_BASE_DOMAIN: example.com
+          LEGACY_HOSTS: "example.com, www.example.com"
+          LEGACY_UPSTREAM: host.docker.internal:8088
+        run: |
+          infra/scripts/render-caddy.sh --out "$PWD/rendered-b"
+          test ! -s rendered-b/apex.caddy
+          docker run --rm -v "$PWD/rendered-b:/etc/caddy:ro" -v "$PWD/app:/srv/platform/app:ro" \
+            -e ACME_EMAIL=ci@example.com -e CLOUDFLARE_API_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+            platform-caddy:ci caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+  php:
+    name: PHP (pint, phpstan level 6, pest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agentsites/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, pgsql, intl, gd, zip, bcmath, pcntl, redis
+          tools: composer:v2
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: vendor/bin/pint --test
+      - run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+      - run: vendor/bin/pest --ci

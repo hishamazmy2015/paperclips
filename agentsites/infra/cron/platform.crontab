@@ -1,0 +1,8 @@
+# AgentSites platform — installed to /etc/cron.d/platform by infra/scripts/bootstrap.sh.
+# Laravel's own scheduler runs inside the `scheduler` container (schedule:work); nothing here.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+# m  h  dom mon dow  user  command
+15   2  *   *   *    root  /srv/platform/infra/scripts/backup.sh      >> /var/log/platform-backup.log 2>&1
+30   3  *   *   0    root  /srv/platform/infra/scripts/rotate-logs.sh >> /var/log/platform-rotate.log 2>&1

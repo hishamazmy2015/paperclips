@@ -1,0 +1,37 @@
+{
+  "$comment": "ProvisionInput example (spec §12). Only identity.display_name and contact.whatsapp are required; everything else falls back to config/tenant-defaults.php and generated content.",
+  "slug": "ahmed-al-falasi",
+  "theme_key": "atlas",
+  "locale": "en",
+  "config": {
+    "identity": {
+      "display_name": "Ahmed Al Falasi",
+      "agency_name": "Falasi Properties",
+      "brn": "12345",
+      "languages": ["ar", "en"],
+      "years_experience": 8
+    },
+    "contact": {
+      "whatsapp": "+971500000001",
+      "phone": "+971500000001",
+      "email": "ahmed@example.com",
+      "office_address": "Business Bay, Dubai",
+      "socials": {
+        "instagram": "https://instagram.com/example"
+      }
+    },
+    "branding": {
+      "palette": "navy",
+      "dark_mode": "auto"
+    },
+    "content": {
+      "service_areas": ["Downtown", "Marina", "Business Bay"],
+      "specialties": ["Off-plan", "Luxury apartments"]
+    },
+    "locale": {
+      "default": "en",
+      "enabled": ["ar", "en"],
+      "currency": "AED"
+    }
+  }
+}
