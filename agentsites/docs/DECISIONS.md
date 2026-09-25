@@ -120,3 +120,48 @@ also listed in `DISCOVERY.md` §6.
     `*.example.test` to the local server, so sites are opened by host on a 375×667 mobile viewport
     like a phone would. Alternatives: rewriting `Host` headers (Chromium ignores them for
     navigation), `/etc/hosts` (not wildcard-capable). CI seeds 200 sites; locally 1000 (`E2E_SITES`).
+
+## 2026-09-26 (Phase 2)
+
+35. **A sign-in creates a *partial* draft tenant through the same `ProvisionTenant` path**
+    (`ProvisionInput::partial`): name placeholder from Google/the email local part, WhatsApp only
+    when the sign-in verified a phone. The JSON schema therefore requires only `identity`;
+    `contact.whatsapp` is required **to publish** (`PublishTenant::missingForPublish`, `CannotPublish`).
+    Alternatives: a separate onboarding-draft table (two write paths), creating the tenant at S2
+    (autosave would have no target, against §13 S1). Reason: one write path, autosave from the
+    first keystroke, and publishing still guarantees a complete site.
+36. **Template copy is regenerated as the facts change during onboarding**
+    (`ProvisionTenant::refreshTemplateContent`): only fields still marked `template` are rewritten,
+    typed text and AI text are never touched; the Claude generator is queued once, at publish.
+37. **One-time codes are HMAC-SHA256 of `identifier|code` under `APP_KEY`, one live code per
+    identifier**, 6 digits, 10 min, 5 attempts, 3 sends / identifier / 10 min, 10 sends and 30
+    verifications / IP / 10 min (`OtpService`). The magic link is a Laravel temporary signed route
+    carrying the code row id: single use, same 10-minute life. Alternative: bcrypt per code
+    (slower, no benefit at 6 digits with attempt limits).
+38. **Livewire 3.8 for the wizard** (Livewire 4 exists; the spec names 3, and 3.8 supports
+    Laravel 13). One full-page component, `?step=` in the URL, autosave on every change through
+    `TenantConfig::save` (so the host cache is purged and the preview is always current).
+39. **The preview iframe loads the real draft site by its own host with the preview token**;
+    `ResolveTenant` marks such requests and `SiteHeaders` answers with
+    `Content-Security-Policy: frame-ancestors 'self' <app origin>` instead of `X-Frame-Options: DENY`
+    (§17). Browser-facing URLs come from `Hosts::browserUrl`, which keeps the scheme and port of
+    the current request (http://…:8123 in dev, https://…:8444 before the cutover).
+40. **Media: GD re-encodes every upload to WebP** (square 512 for photos, fit 640 for logos, EXIF
+    dropped), stored as `{tenant_id}/{name}-{sha12}.webp` on the `media` disk and served by
+    `MediaController` on the tenant host (own directory only) and the app host (owner only), with
+    immutable caching. "From my logo" = dominant saturated hue → `branding.palette = custom`.
+41. **Providers switch by config, never by code** (`config/providers.php`): `CONTENT_GENERATOR`
+    template|claude, `WHATSAPP_PROVIDER` null|file|dialog360, `MAIL_MAILER` incl. a `file` transport;
+    Turnstile is off until both keys exist and fails closed when on. The `file` sinks
+    (`storage/app/private/{mail,whatsapp}-sink`) are what staging without Mailpit and the Playwright
+    suite read.
+42. **ClaudeGenerator uses the official `anthropic-ai/sdk`**, model `claude-opus-5` by default
+    (`ANTHROPIC_MODEL`), structured JSON output (one key per field × locale), the server-side
+    refusal fallback (`fallbacks: default`), and runs only inside the queued `GenerateContent` job.
+43. **Abandonment reminders are two nullable timestamps on `tenants`** (`reminder_1h_sent_at`,
+    `reminder_24h_sent_at`) plus `users.reminders_opted_out_at`, sent by a 15-minute scheduled job
+    from `updated_at`. Alternative: a reminders table (more rows, nothing extra to show). The funnel
+    numbers are a CLI report (`platform:funnel`) until the Filament admin (Phase 6) renders them.
+44. **The site's default locale becomes the UI language the agent published in.** The wizard
+    exposes no locale field (≤ 6 typed fields); the dashboard (Phase 4) can change it.
+

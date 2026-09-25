@@ -15,7 +15,16 @@ return [
     */
 
     'postmark' => [
-        'key' => env('POSTMARK_API_KEY'),
+        'token' => env('POSTMARK_TOKEN', env('POSTMARK_API_KEY')),
+        'key' => env('POSTMARK_TOKEN', env('POSTMARK_API_KEY')),
+    ],
+
+    // Google OAuth (spec §6). The redirect is relative on purpose: Socialite resolves it
+    // against the app host of the current request, which derives from PLATFORM_BASE_DOMAIN.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => '/auth/google/callback',
     ],
 
     'resend' => [

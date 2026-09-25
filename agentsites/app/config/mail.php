@@ -79,6 +79,11 @@ return [
             'transport' => 'array',
         ],
 
+        // Writes each message as JSON under storage/app/private/mail-sink (dev, staging, E2E).
+        'file' => [
+            'transport' => 'file',
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [

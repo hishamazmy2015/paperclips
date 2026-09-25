@@ -87,8 +87,8 @@ final class ProvisionTenant
 
         // 3. after commit: content (never blank), demo listings, cache warm-up (§12.3)
         $this->fillMissingContent($tenant);
-        if (! $this->generator instanceof TemplateGenerator) {
-            GenerateContent::dispatch($tenant->id);
+        if (! $in->partial) {
+            $this->scheduleAiContent($tenant);
         }
         SeedDemoListings::dispatch($tenant->id);
         WarmCache::dispatch($tenant->id);
@@ -115,9 +115,16 @@ final class ProvisionTenant
             $errors[] = 'name: 2 to 80 characters required';
         }
 
-        $whatsapp = $this->phones->normalize($in->whatsapp);
-        if ($whatsapp === null) {
-            $errors[] = 'whatsapp: not a valid phone number (E.164, e.g. +9715XXXXXXXX)';
+        // A partial (onboarding) draft may not have a WhatsApp number yet; Publish requires one.
+        $whatsapp = null;
+        if (trim($in->whatsapp) !== '' || ! $in->partial) {
+            $whatsapp = $this->phones->normalize($in->whatsapp);
+            if ($whatsapp === null) {
+                $errors[] = 'whatsapp: not a valid phone number (E.164, e.g. +9715XXXXXXXX)';
+            }
+        }
+        if ($in->partial && $in->publish) {
+            $errors[] = 'publish: a partial draft cannot be published';
         }
 
         $theme = $in->themeKey ?? $this->themes->default();
@@ -171,6 +178,61 @@ final class ProvisionTenant
         $slug = $in->slug !== null ? strtolower(trim($in->slug)) : Slugs::fromName((string) $config['identity']['display_name']);
 
         return Tenant::query()->where('account_id', $account->id)->where('slug', $slug)->first();
+    }
+
+    /**
+     * Queue the AI generator for the template-marked fields (spec §12.3) — only when one is
+     * configured; the template text stays until (and unless) it answers.
+     */
+    public function scheduleAiContent(Tenant $tenant): void
+    {
+        if (! $this->generator instanceof TemplateGenerator) {
+            GenerateContent::dispatch($tenant->id);
+        }
+    }
+
+    /**
+     * Regenerate every template-marked field from the tenant's current facts (name, agency,
+     * areas). The onboarding wizard calls this as the agent types, so the preview never talks
+     * about a placeholder name. Fields the agent typed or the AI wrote are never touched.
+     */
+    public function refreshTemplateContent(Tenant $tenant): void
+    {
+        $marks = $tenant->ai_generated_fields ?? [];
+        /** @var array<string, mixed> $stored */
+        $stored = $tenant->config ?? [];
+        $merged = $tenant->mergedConfig();
+
+        $fields = [];
+        foreach ($marks as $key => $source) {
+            if ($source !== 'template') {
+                continue;
+            }
+            if ($key === 'content.why_me') {
+                data_set($stored, 'content.why_me', $this->fallback->whyMe($merged));
+
+                continue;
+            }
+            $parts = explode('.', (string) $key);
+            $locale = array_pop($parts);
+            if (in_array($locale, ['ar', 'en'], true)) {
+                $fields[implode('.', $parts)][] = $locale;
+            }
+        }
+        if ($fields !== []) {
+            /** @var list<string> $locales */
+            $locales = array_values(array_unique(array_merge(...array_values($fields))));
+            foreach ($this->fallback->generate($merged, array_keys($fields), $locales) as $field => $texts) {
+                foreach ($texts as $locale => $text) {
+                    if (($marks["{$field}.{$locale}"] ?? null) === 'template' && $text !== '') {
+                        data_set($stored, "{$field}.{$locale}", $text);
+                    }
+                }
+            }
+        }
+
+        $this->config->save($tenant, $stored);
+        $this->fillMissingContent($tenant);
     }
 
     /**

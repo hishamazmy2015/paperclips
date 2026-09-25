@@ -64,6 +64,13 @@ final class ResolveTenant
                 if (! $this->mayPreview($request, $tenant)) {
                     return $this->responses->unknown();
                 }
+                $request->attributes->set('site_preview', true);
+                break;
+
+            case Tenant::STATUS_LIVE:
+                if ((string) $request->query('preview', '') !== '' && $this->mayPreview($request, $tenant)) {
+                    $request->attributes->set('site_preview', true);
+                }
                 break;
         }
 

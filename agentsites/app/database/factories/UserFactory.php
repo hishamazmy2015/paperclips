@@ -20,7 +20,7 @@ class UserFactory extends Factory
             'account_id' => Account::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => '+9715'.fake()->unique()->numerify('########'),
+            'phone' => '+97150'.fake()->unique()->numerify('#######'),
             'role' => User::ROLE_OWNER,
             'auth_provider' => 'email',
             'email_verified_at' => now(),

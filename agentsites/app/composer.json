@@ -7,11 +7,15 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
+        "anthropic-ai/sdk": "^0.51",
+        "bacon/bacon-qr-code": "^3.1",
         "giggsey/libphonenumber-for-php": "^9.0",
         "laravel/framework": "^13.17",
         "laravel/horizon": "^5.0",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.31",
         "laravel/tinker": "^3.0",
+        "livewire/livewire": "^3.8",
         "opis/json-schema": "^2.3"
     },
     "require-dev": {

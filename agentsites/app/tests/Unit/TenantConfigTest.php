@@ -16,7 +16,9 @@ it('accepts the minimal config (display_name + whatsapp)', function (): void {
 });
 
 it('reports missing required fields, bad patterns and unknown keys', function (): void {
-    expect($this->config->validate(['identity' => ['display_name' => 'Ahmed']]))->not->toBe([])
+    // identity is the only block a draft must have (spec §13 S1); WhatsApp is checked at publish
+    expect($this->config->validate(['identity' => ['display_name' => 'Ahmed']]))->toBe([])
+        ->and($this->config->validate(['contact' => ['whatsapp' => '+971501234567']]))->not->toBe([])
         ->and($this->config->validate(['identity' => ['display_name' => 'Ahmed'], 'contact' => ['whatsapp' => '0501234567']]))->not->toBe([])
         ->and($this->config->validate(['identity' => ['display_name' => 'Ahmed', 'nope' => 1], 'contact' => ['whatsapp' => '+971501234567']]))->not->toBe([])
         ->and($this->config->validate(['identity' => ['display_name' => 'A'], 'contact' => ['whatsapp' => '+971501234567']]))->not->toBe([])

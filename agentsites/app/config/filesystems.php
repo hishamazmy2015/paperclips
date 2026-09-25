@@ -47,6 +47,13 @@ return [
             'report' => false,
         ],
 
+        // Tenant media under {MEDIA_ROOT}/{tenant_id}/ (spec §5, §17); served by MediaController.
+        'media' => [
+            'driver' => 'local',
+            'root' => env('MEDIA_ROOT', '/srv/platform/media'),
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

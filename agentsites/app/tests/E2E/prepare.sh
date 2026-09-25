@@ -16,6 +16,7 @@ test -f public/build/manifest.json || npm run build
 
 php artisan migrate:fresh --force --no-interaction
 php artisan cache:clear --no-interaction   # file store: keeps the directory and its .gitignore
+rm -rf storage/app/private/mail-sink storage/app/private/whatsapp-sink storage/framework/sessions/*   # fresh sinks and sessions for the onboarding flow
 php artisan platform:site:generate --count="$E2E_SITES" --seed=7 --out=storage/app/e2e-agents.csv --provision --json > tests/E2E/.import.json
 php artisan platform:site:create --name "Draft Agent" --whatsapp +971509999999 --slug draft-agent --draft --json > tests/E2E/.draft.json
 php artisan platform:site:list --limit=0 --json > tests/E2E/.sites.json

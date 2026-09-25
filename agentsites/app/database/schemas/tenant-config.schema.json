@@ -4,7 +4,7 @@
   "title": "Tenant configuration (spec §9)",
   "description": "Stored in tenants.config. Defaults for every optional field live in config/tenant-defaults.php and are merged at read time, never stored. A config with only identity.display_name and contact.whatsapp must render a full site.",
   "type": "object",
-  "required": ["identity", "contact"],
+  "required": ["identity"],
   "properties": {
     "_schema": { "type": "integer", "minimum": 1, "description": "Schema version of the stored document; ConfigMigrator upgrades older values lazily." },
     "identity": {
@@ -26,7 +26,7 @@
     },
     "contact": {
       "type": "object",
-      "required": ["whatsapp"],
+      "description": "contact.whatsapp is required to publish (PublishTenant::missingForPublish); an onboarding draft may not have it yet.",
       "properties": {
         "whatsapp": { "type": "string", "pattern": "^\\+[1-9][0-9]{7,14}$" },
         "phone": { "type": "string" },

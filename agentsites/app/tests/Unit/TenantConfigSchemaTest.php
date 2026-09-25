@@ -16,9 +16,11 @@ it('is a valid draft 2020-12 schema requiring identity and contact', function ()
     $schema = tenantSchema();
 
     expect($schema['$schema'])->toBe('https://json-schema.org/draft/2020-12/schema')
-        ->and($schema['required'])->toBe(['identity', 'contact'])
+        ->and($schema['required'])->toBe(['identity']) // contact arrives at S2; publishing checks it
         ->and($schema['properties']['identity']['required'])->toBe(['display_name'])
-        ->and($schema['properties']['contact']['required'])->toBe(['whatsapp']);
+        // WhatsApp is required to publish (PublishTenant), not to hold an onboarding draft (spec §13 S1)
+        ->and($schema['properties']['contact'])->not->toHaveKey('required')
+        ->and($schema['properties']['contact']['properties']['whatsapp']['pattern'])->toBe('^\\+[1-9][0-9]{7,14}$');
 });
 
 it('validates WhatsApp numbers as E.164', function (): void {

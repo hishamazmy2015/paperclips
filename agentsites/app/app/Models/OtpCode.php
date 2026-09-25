@@ -6,8 +6,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
-/** Spec §8 — 003 (auth flows in Phase 2). */
+/**
+ * A one-time sign-in code (spec §8 — 003), hashed at rest; see App\Auth\OtpService.
+ *
+ * @property string $identifier
+ * @property string $channel
+ * @property string $code_hash
+ * @property Carbon $expires_at
+ * @property int $attempts
+ * @property Carbon|null $consumed_at
+ * @property string|null $ip
+ */
 #[Fillable(['identifier', 'channel', 'code_hash', 'expires_at', 'attempts', 'consumed_at', 'ip'])]
 class OtpCode extends Model
 {

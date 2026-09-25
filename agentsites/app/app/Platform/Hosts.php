@@ -51,6 +51,29 @@ final class Hosts
     }
 
     /**
+     * A URL for the browser that made the current request: same scheme and port as that
+     * request (http://…:8123 in dev, https://…:8444 before the cutover, https://… after), so
+     * links, iframes and share buttons work in every environment. https:// outside HTTP.
+     */
+    public static function browserUrl(string $host, string $path = '/'): string
+    {
+        return self::browserOrigin($host).'/'.ltrim($path, '/');
+    }
+
+    public static function browserOrigin(string $host): string
+    {
+        if (! app()->bound('request') || (app()->runningInConsole() && ! app()->runningUnitTests())) {
+            return 'https://'.$host;
+        }
+        $request = request();
+        $scheme = $request->getScheme();
+        $port = (int) $request->getPort();
+        $default = $scheme === 'https' ? 443 : 80;
+
+        return $scheme.'://'.$host.($port !== 0 && $port !== $default ? ':'.$port : '');
+    }
+
+    /**
      * Platform-owned hosts (apex, app., admin., api., cdn., staging.): the tenant
      * resolver skips these instead of looking them up as tenant domains.
      */

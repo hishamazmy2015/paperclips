@@ -7,8 +7,9 @@ under two minutes typing at most six fields (goal G2).
 
 `§n` below refers to sections of the master build specification.
 
-**Status: Phase 1 (Foundation) built and tested, including bulk import, a 1000-agent generator
-and a Playwright mobile-browser suite; Phase 0's server steps still pending.**
+**Status: Phase 2 (Onboarding) built and tested — sign-in without passwords, the three-step
+wizard with live preview, publish, success screen, reminders and funnel; Phase 0's server steps
+still pending.**
 The latest phase report is in `docs/reports/`; what is known about the production server
 and what is still pending is in `docs/DISCOVERY.md`; every decision is in `docs/DECISIONS.md`.
 
@@ -18,8 +19,11 @@ php artisan platform:site:create --name "Ahmed Al Falasi" --whatsapp +9715012345
 
 php artisan platform:site:import samples/agents.csv          # one site per CSV row, batched, resumable (A5)
 php artisan platform:site:generate --count=1000 --provision  # 1000 different agents → 1000 live sites
-npm run e2e                                                  # Playwright opens them on a phone-sized Chromium
+npm run e2e                                                  # Playwright: sites by host + the whole onboarding flow (A2) on a phone-sized Chromium
 ```
+
+An agent's own path: `app.{base}/start` → email code (or Google / WhatsApp code) → about you →
+your website → go live → published. See `docs/ONBOARDING.md`.
 
 ## Layout (§7)
 
@@ -31,8 +35,8 @@ npm run e2e                                                  # Playwright opens 
 | `infra/caddy/` | `Caddyfile.tmpl` + snippets (rendered by `infra/scripts/render-caddy.sh`), xcaddy `Dockerfile` with the Cloudflare DNS module |
 | `infra/app/` | PHP 8.3 FPM image, `php.ini`, pool config |
 | `infra/scripts/` | Idempotent bash: `bootstrap`, `deploy`, `build-assets`, `backup`, `restore`, `render-caddy`, `rotate-logs`, `check-base-domain`, plus Phase 0 `discover` and `pre-platform-backup` |
-| `app/` | Laravel 13: `app/Tenancy` (context, scope, host cache, resolver), `app/Provisioning` (the single write path), `app/Themes`, `app/Http` (site routes, TLS-allow endpoint), `app/Console/Commands/Platform` (`platform:*` CLI), 21 migrations, `resources/themes/atlas`, `lang/{ar,en}` |
-| `docs/` | `DISCOVERY.md`, `DECISIONS.md`, `ADD-SITE.md`, phase reports |
+| `app/` | Laravel 13: `app/Tenancy` (context, scope, host cache, resolver), `app/Provisioning` (the single write path), `app/Auth` (codes, magic link, Google, Turnstile), `app/Livewire/Onboarding` (the wizard), `app/Content` (template + Claude generators), `app/Messaging` (WhatsApp notifiers), `app/Media`, `app/Themes`, `app/Http`, `app/Console/Commands/Platform` (`platform:*` CLI), 23 migrations, `resources/themes/atlas`, `lang/{ar,en}` |
+| `docs/` | `DISCOVERY.md`, `DECISIONS.md`, `ADD-SITE.md`, `ONBOARDING.md`, phase reports |
 | `samples/` | `agents.csv`, `agent.json`, `listings.csv` |
 
 ## Run it

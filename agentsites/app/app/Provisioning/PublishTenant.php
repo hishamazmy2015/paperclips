@@ -8,6 +8,7 @@ use App\Messaging\Notifier;
 use App\Models\Tenant;
 use App\Platform\Audit;
 use App\Platform\EventLog;
+use App\Provisioning\Exceptions\CannotPublish;
 use App\Tenancy\HostCache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -27,8 +28,14 @@ final class PublishTenant
         private readonly Audit $audit,
     ) {}
 
+    /** @throws CannotPublish */
     public function handle(Tenant $tenant): Tenant
     {
+        $missing = self::missingForPublish($tenant);
+        if ($missing !== []) {
+            throw new CannotPublish($missing);
+        }
+
         $firstPublish = $tenant->published_at === null;
 
         /** @var array<string, mixed> $stored */
@@ -51,6 +58,26 @@ final class PublishTenant
         }
 
         return $tenant;
+    }
+
+    /**
+     * What a draft still lacks before it can go live: a real name and a WhatsApp number
+     * (an onboarding draft may have neither yet — spec §13 S1/S2).
+     *
+     * @return list<string>
+     */
+    public static function missingForPublish(Tenant $tenant): array
+    {
+        $config = $tenant->mergedConfig();
+        $missing = [];
+        if (mb_strlen(trim((string) data_get($config, 'identity.display_name', ''))) < 2) {
+            $missing[] = 'identity.display_name';
+        }
+        if (preg_match('/^\+[1-9][0-9]{7,14}$/', (string) data_get($config, 'contact.whatsapp', '')) !== 1) {
+            $missing[] = 'contact.whatsapp';
+        }
+
+        return $missing;
     }
 
     private function welcome(Tenant $tenant): void

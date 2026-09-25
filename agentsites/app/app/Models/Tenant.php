@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * One website. Everything about it is data: creating, editing, cloning, suspending or
@@ -22,8 +23,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property array<string, mixed>|null $config
  * @property array<string, string>|null $ai_generated_fields
+ * @property int $onboarding_step
+ * @property Carbon|null $onboarding_completed_at
+ * @property Carbon|null $reminder_1h_sent_at
+ * @property Carbon|null $reminder_24h_sent_at
  */
-#[Fillable(['account_id', 'slug', 'status', 'theme_key', 'config', 'config_version', 'published_at', 'onboarding_step', 'onboarding_completed_at', 'ai_generated_fields'])]
+#[Fillable(['account_id', 'slug', 'status', 'theme_key', 'config', 'config_version', 'published_at', 'onboarding_step', 'onboarding_completed_at', 'ai_generated_fields', 'reminder_1h_sent_at', 'reminder_24h_sent_at'])]
 class Tenant extends Model
 {
     /** @use HasFactory<TenantFactory> */
@@ -62,6 +67,8 @@ class Tenant extends Model
             'onboarding_step' => 'integer',
             'published_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
+            'reminder_1h_sent_at' => 'datetime',
+            'reminder_24h_sent_at' => 'datetime',
         ];
     }
 

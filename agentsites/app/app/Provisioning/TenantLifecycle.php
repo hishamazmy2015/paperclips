@@ -73,6 +73,48 @@ final class TenantLifecycle
     }
 
     /**
+     * A draft's slug is free to change while onboarding (spec §8: immutable only after
+     * publish, §13 S3): the subdomain host row follows it and no redirect is written.
+     *
+     * @throws SlugUnavailable
+     */
+    public function changeDraftSlug(Tenant $tenant, string $newSlug): Tenant
+    {
+        $newSlug = strtolower(trim($newSlug));
+        if ($newSlug === $tenant->slug) {
+            return $tenant;
+        }
+        if ($tenant->published_at !== null) {
+            throw new SlugUnavailable($newSlug, 'published', []);
+        }
+        $reason = $this->slugs->reason($newSlug);
+        if ($reason !== null) {
+            throw new SlugUnavailable($newSlug, $reason, $this->slugs->suggest($newSlug));
+        }
+
+        $oldHost = $tenant->subdomainHost();
+        DB::transaction(function () use ($tenant, $newSlug, $oldHost): void {
+            $tenant->slug = $newSlug;
+            $tenant->save();
+            $newHost = $tenant->subdomainHost();
+
+            TenantContext::global(function () use ($tenant, $oldHost, $newHost): void {
+                $domain = Domain::unscopedByTenant()->where('tenant_id', $tenant->id)->where('host', $oldHost)->first();
+                if ($domain !== null) {
+                    $domain->host = $newHost;
+                    $domain->save();
+                }
+            });
+            $this->audit->record('tenant.slug_changed', ['to' => $newSlug], tenant: $tenant, account: $tenant->account, targetType: Tenant::class, targetId: $tenant->id);
+        });
+
+        $this->hosts->forgetHost($oldHost);
+        $this->hosts->forgetTenant($tenant);
+
+        return $tenant;
+    }
+
+    /**
      * The one legitimate slug change (spec §8, §15): the old subdomain host becomes a 301
      * redirect rule for RENAME_REDIRECT_DAYS.
      *

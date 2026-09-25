@@ -7,12 +7,20 @@
     <meta name="description" content="{{ __('platform.landing.headline') }}">
     @vite('resources/css/app.css')
 </head>
-<body class="min-h-screen bg-white text-neutral-900 antialiased">
-    <main class="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-8 px-6 text-center">
-        <a href="?lang={{ $locale === 'ar' ? 'en' : 'ar' }}" class="rounded-full border px-3 py-1 text-sm">{{ $locale === 'ar' ? 'English' : 'العربية' }}</a>
-        <h1 class="text-4xl font-bold sm:text-6xl">{{ __('platform.landing.headline') }}</h1>
-        <a href="/start" class="rounded-full bg-neutral-900 px-8 py-4 text-lg font-semibold text-white">{{ __('platform.landing.cta') }}</a>
-        <p class="text-neutral-500">{{ __('platform.landing.counter', ['count' => $published]) }}</p>
+<body class="app-body">
+    <main class="landing">
+        <a href="?lang={{ $locale === 'ar' ? 'en' : 'ar' }}" class="app-lang landing-lang">{{ $locale === 'ar' ? 'English' : 'العربية' }}</a>
+        <h1 class="landing-h1">{{ __('platform.landing.headline') }}</h1>
+        <a href="{{ $startUrl }}" class="btn-primary landing-cta" data-test="landing-cta">{{ __('platform.landing.cta') }}</a>
+        <p class="landing-counter" data-test="published-count">{{ __('platform.landing.counter', ['count' => $published]) }}</p>
+        <ul class="landing-themes" aria-label="{{ __('platform.wizard.theme') }}">
+            @foreach ($themes as $theme)
+                <li>
+                    <img src="{{ $theme['preview'] }}" alt="{{ $theme['name'] }}" width="240" height="420" loading="lazy">
+                    <span>{{ $theme['name'] }}@if (! $theme['installed']) · {{ __('platform.wizard.coming_soon') }}@endif</span>
+                </li>
+            @endforeach
+        </ul>
     </main>
 </body>
 </html>

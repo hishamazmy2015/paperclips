@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AppLocale;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\SiteHeaders;
@@ -26,7 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Only Caddy can reach php-fpm (its port is never published), so its X-Forwarded-* are trusted.
         $middleware->trustProxies(at: '*');
+        $middleware->redirectGuestsTo(fn (Request $request): string => route('start'));
         $middleware->alias([
+            'app.locale' => AppLocale::class,
             'tenant' => ResolveTenant::class,
             'site.locale' => SetLocale::class,
             'site.headers' => SiteHeaders::class,

@@ -5,6 +5,7 @@ import { defineConfig } from '@playwright/test';
 // (tests/E2E/prepare.sh seeds the database with generated sites first).
 export default defineConfig({
     testDir: './tests/E2E',
+    testIgnore: process.env.E2E_TIMING_RUNS ? [] : ['**/onboarding-timing.spec.js'],
     timeout: 30_000,
     fullyParallel: false,
     workers: 2,
@@ -12,6 +13,7 @@ export default defineConfig({
     reporter: [['list']],
     use: {
         baseURL: 'http://127.0.0.1:8123',
+        testIdAttribute: 'data-test',
         viewport: { width: 375, height: 667 }, // iPhone SE
         deviceScaleFactor: 2,
         isMobile: true,

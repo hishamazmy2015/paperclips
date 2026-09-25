@@ -29,6 +29,8 @@ final class ProvisionInput
         public readonly array $areas = [],
         public readonly array $config = [],
         public readonly bool $publish = false,
+        /** An onboarding draft (spec §13 S1): name and WhatsApp may still be missing; AI content waits for publish. */
+        public readonly bool $partial = false,
     ) {}
 
     /** @param  array<string, mixed>  $data */
