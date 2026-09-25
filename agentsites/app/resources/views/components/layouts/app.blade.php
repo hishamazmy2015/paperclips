@@ -11,6 +11,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 <body class="app-body">
     <header class="app-header">
@@ -28,5 +29,7 @@
     <main class="app-main">
         {{ $slot }}
     </main>
+    {{-- Livewire ships Alpine; loaded on every app page so the sign-in forms (auto-submit, phone toggle) work without a component --}}
+    @livewireScripts
 </body>
 </html>
