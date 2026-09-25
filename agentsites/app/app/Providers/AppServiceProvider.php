@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Anthropic\Client as AnthropicClient;
+use App\Auth\OtpService;
 use App\Content\ClaudeGenerator;
 use App\Content\ContentGenerator;
 use App\Content\TemplateGenerator;
@@ -76,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
         Mail::extend('file', fn (array $config): FileTransport => new FileTransport);
 
         // Sign-in abuse limits per IP (spec §17); per-identifier limits live in OtpService.
-        RateLimiter::for('otp-send', fn (Request $request): Limit => Limit::perMinutes(10, 10)->by((string) $request->ip()));
-        RateLimiter::for('otp-verify', fn (Request $request): Limit => Limit::perMinutes(10, 30)->by((string) $request->ip()));
+        RateLimiter::for('otp-send', fn (Request $request): Limit => Limit::perMinutes(10, OtpService::limit('sends_per_ip', OtpService::SENDS_PER_IP))->by((string) $request->ip()));
+        RateLimiter::for('otp-verify', fn (Request $request): Limit => Limit::perMinutes(10, OtpService::limit('verifies_per_ip', OtpService::VERIFIES_PER_IP))->by((string) $request->ip()));
     }
 }

@@ -45,9 +45,9 @@ final class OtpService
     public function issue(string $identifier, string $channel, ?string $ip): array
     {
         $identifier = self::normalizeIdentifier($identifier);
-        $this->hit('otp:send:id:'.$identifier, self::SENDS_PER_IDENTIFIER);
+        $this->hit('otp:send:id:'.$identifier, self::limit('sends_per_identifier', self::SENDS_PER_IDENTIFIER));
         if ($ip !== null) {
-            $this->hit('otp:send:ip:'.$ip, self::SENDS_PER_IP);
+            $this->hit('otp:send:ip:'.$ip, self::limit('sends_per_ip', self::SENDS_PER_IP));
         }
 
         OtpCode::query()->where('identifier', $identifier)->whereNull('consumed_at')->update(['consumed_at' => now()]);
@@ -75,7 +75,7 @@ final class OtpService
     {
         $identifier = self::normalizeIdentifier($identifier);
         if ($ip !== null) {
-            $this->hit('otp:verify:ip:'.$ip, self::VERIFIES_PER_IP);
+            $this->hit('otp:verify:ip:'.$ip, self::limit('verifies_per_ip', self::VERIFIES_PER_IP));
         }
         $code = self::digits($code);
 
@@ -140,6 +140,12 @@ final class OtpService
         $code = strtr($code, ['٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9']);
 
         return preg_replace('/\D+/', '', $code) ?? '';
+    }
+
+    /** The configured limit (config/providers.php `otp`), falling back to the spec default. */
+    public static function limit(string $name, int $default): int
+    {
+        return max(1, (int) config('providers.otp.'.$name, $default));
     }
 
     private function hit(string $key, int $max): void

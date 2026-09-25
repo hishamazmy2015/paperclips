@@ -35,4 +35,12 @@ return [
         'secret' => env('TURNSTILE_SECRET_KEY'),
     ],
 
+    // Sign-in code limits per 10 minutes (spec §17). Production keeps the defaults; the
+    // Playwright timing runs raise the per-IP ones because every run comes from one address.
+    'otp' => [
+        'sends_per_identifier' => (int) env('OTP_SENDS_PER_IDENTIFIER', 3),
+        'sends_per_ip' => (int) env('OTP_SENDS_PER_IP', 10),
+        'verifies_per_ip' => (int) env('OTP_VERIFIES_PER_IP', 30),
+    ],
+
 ];

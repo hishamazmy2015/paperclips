@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { onboard } from './onboarding.spec.js';
+import { onboard } from './onboarding-flow.js';
 
 // Phase 2 DoD (spec §21): median landing → published < 120 s over 10 runs. Opt in with
 // E2E_TIMING_RUNS=10 (npm run e2e:timing); writes tests/E2E/timing.json.
