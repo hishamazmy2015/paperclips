@@ -6,6 +6,7 @@
   "type": "object",
   "required": ["identity", "contact"],
   "properties": {
+    "_schema": { "type": "integer", "minimum": 1, "description": "Schema version of the stored document; ConfigMigrator upgrades older values lazily." },
     "identity": {
       "type": "object",
       "required": ["display_name"],

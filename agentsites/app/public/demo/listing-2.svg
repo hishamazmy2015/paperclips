@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Sample listing 2">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#5eead4"/></linearGradient></defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <g fill="#ffffff" fill-opacity="0.9"><path d="M400 150 L560 290 L520 290 L520 430 L280 430 L280 290 L240 290 Z"/><rect x="370" y="340" width="60" height="90" fill="#0f766e" fill-opacity="0.6"/></g>
+  <text x="400" y="520" font-family="system-ui, sans-serif" font-size="28" fill="#ffffff" text-anchor="middle" opacity="0.9">Sample listing</text>
+</svg>

@@ -8,7 +8,8 @@ parameters:
         - config
         - database
         - routes
-        - tests
+    # Pest test files bind $this to the TestCase inside closures, which PHPStan cannot see;
+    # tests are checked by Pint and by running them (spec §19), not by static analysis.
     excludePaths:
         - database/migrations
     tmpDir: storage/phpstan

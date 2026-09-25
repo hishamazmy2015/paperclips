@@ -43,6 +43,9 @@ it('has a default for every optional top-level section, and none for required fi
     $defaults = config('tenant-defaults');
 
     foreach (array_keys($schema['properties']) as $section) {
+        if ($section === '_schema') {
+            continue; // document metadata, not a config section
+        }
         expect($defaults)->toHaveKey($section);
     }
     expect($defaults['identity'])->not->toHaveKey('display_name')

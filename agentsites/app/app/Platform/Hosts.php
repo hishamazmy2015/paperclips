@@ -57,8 +57,9 @@ final class Hosts
     public static function isPlatformHost(string $host): bool
     {
         $host = self::normalize($host);
+        $base = self::base();
 
-        return $host === self::base() || in_array($host, self::all(), true);
+        return $host === $base || $host === 'www.'.$base || in_array($host, self::all(), true);
     }
 
     public static function isLegacyHost(string $host): bool

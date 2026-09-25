@@ -25,6 +25,9 @@ mkdir -p "${PLATFORM_ROOT}/app/vendor"
 chown -R 33:33 "${PLATFORM_ROOT}/app/storage" "${PLATFORM_ROOT}/app/bootstrap/cache" "${PLATFORM_ROOT}/app/vendor"
 compose run --rm --no-deps -T --user www-data app composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+log "building theme assets (Tailwind, self-hosted fonts) — once per deploy, spec §5"
+"${SCRIPT_DIR}/build-assets.sh"
+
 log "starting / refreshing containers"
 compose up -d --remove-orphans
 

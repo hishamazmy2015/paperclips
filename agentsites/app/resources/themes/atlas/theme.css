@@ -1,0 +1,62 @@
+/* Atlas theme (spec §10). Built once at deploy by Vite; palette colours come from CSS
+   variables the layout inlines per tenant, so one stylesheet serves every site. */
+@import "tailwindcss";
+
+/* Self-hosted fonts, font-display: swap (spec §10). */
+@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/500.css";
+@import "@fontsource/ibm-plex-sans-arabic/700.css";
+
+@source "../../views/components/site";
+@source "./views";
+
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-primary-contrast: var(--c-primary-contrast);
+  --color-secondary: var(--c-secondary);
+  --color-accent: var(--c-accent);
+  --color-page: var(--c-background);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-border);
+  --font-sans: "Inter Variable", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  html[dir="rtl"] body { font-family: var(--font-arabic); }
+  body { background: var(--color-page); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+  html[data-dark="on"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    html[data-dark="auto"] {
+      --c-background: var(--c-dark-background);
+      --c-surface: var(--c-dark-surface);
+      --c-text: var(--c-dark-text);
+      --c-muted: var(--c-dark-muted);
+      --c-border: var(--c-dark-border);
+    }
+  }
+  html[data-dark="on"] {
+    --c-background: var(--c-dark-background);
+    --c-surface: var(--c-dark-surface);
+    --c-text: var(--c-dark-text);
+    --c-muted: var(--c-dark-muted);
+    --c-border: var(--c-dark-border);
+  }
+  img { max-width: 100%; height: auto; }
+  :focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+}
+
+@layer components {
+  .btn, .btn-primary, .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-base font-semibold transition-colors; }
+  .btn-primary { @apply bg-primary text-primary-contrast hover:opacity-90; }
+  .btn-outline { @apply border border-line bg-surface text-ink hover:border-primary; }
+  .card { @apply rounded-2xl border border-line bg-surface shadow-sm; }
+  .section { @apply mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:py-16; }
+  .eyebrow { @apply text-sm font-semibold tracking-wide text-primary uppercase; }
+  .h2 { @apply text-2xl font-bold tracking-tight sm:text-3xl; }
+  .prose-site p { @apply mb-4 leading-relaxed text-ink; }
+}

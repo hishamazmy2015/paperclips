@@ -69,9 +69,15 @@ install -m 0644 "${PLATFORM_ROOT}/infra/cron/platform.crontab" /etc/cron.d/platf
 chown -R 33:33 "${PLATFORM_ROOT}/app/storage" "${PLATFORM_ROOT}/app/bootstrap/cache" "${PLATFORM_ROOT}/app/vendor" "${PLATFORM_ROOT}/media"
 compose build --pull app caddy
 compose run --rm --no-deps -T --user www-data app composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+"${SCRIPT_DIR}/build-assets.sh"
 "${SCRIPT_DIR}/render-caddy.sh"
 compose up -d --remove-orphans
 app_exec php artisan migrate --force --no-interaction
 app_exec php artisan optimize
 app_exec php artisan platform:health
-log "bootstrap complete"
+
+# 7. Demo tenant (spec §21 P1 DoD): idempotent, data only — re-running changes nothing.
+log "ensuring the demo site exists"
+app_exec php artisan platform:site:create --name "Demo Agent" --whatsapp "+971500000001" --slug demo \
+  --agency "AgentSites Demo" --areas "Downtown,Marina,Business Bay" --json
+log "bootstrap complete — demo site: https://demo.${PLATFORM_BASE_DOMAIN}:${CADDY_HTTPS_PORT:-443}/"

@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Laravel scheduler (runs in the `scheduler` container, spec §5).
+Schedule::command('platform:purge')->dailyAt('03:30')->withoutOverlapping();
+Schedule::command('platform:events:partitions')->monthlyOn(25, '03:00');

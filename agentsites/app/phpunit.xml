@@ -12,9 +12,14 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!-- Coverage is measured on the areas spec §19 gates at ≥ 90 % lines (Tenancy, Provisioning,
+         Domains, Billing); CI runs pest with coverage (pcov) and a 90 % minimum. -->
     <source>
         <include>
-            <directory>app</directory>
+            <directory>app/Tenancy</directory>
+            <directory>app/Provisioning</directory>
+            <directory>app/Domains</directory>
+            <directory>app/Billing</directory>
         </include>
     </source>
     <php>
@@ -27,8 +32,14 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- Tests run on PostgreSQL 16 like production (partitioning, JSONB, GIN). Local: apt install postgresql-16;
+             createuser platform (password platform) + createdb platform_test. CI: the postgres service in the workflow. -->
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="5432"/>
+        <env name="DB_DATABASE" value="platform_test"/>
+        <env name="DB_USERNAME" value="platform"/>
+        <env name="DB_PASSWORD" value="platform"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

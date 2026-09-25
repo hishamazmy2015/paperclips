@@ -59,3 +59,49 @@ also listed in `DISCOVERY.md` §6.
     weaken isolation (§17). The derived value is therefore "current host".
 16. **Plan prices in `config/plans.php` are placeholders** (AED, ex-VAT) until a product
     decision is recorded here; limits and features follow §14 exactly.
+
+## 2026-09-25 (Phase 1)
+
+17. **Tests run on PostgreSQL 16, never SQLite.** Alternatives: SQLite in memory (faster, but no
+    JSONB, GIN or declarative partitioning, so migrations would need two code paths). Reason:
+    production fidelity; a local `postgresql-16` package and a CI service container cost nothing.
+18. **`TenantScope` throws whenever no tenant is bound, unless platform code explicitly opens a
+    `TenantContext::global()` block** — stricter than §8 ("throws in non-console contexts").
+    Alternatives: allow unscoped queries in console/jobs implicitly. Reason: every cross-tenant
+    query is a reviewable call site; jobs and commands bind a tenant with `TenantContext::with`.
+    Factories for tenant-scoped models run inside a global block (`TenantScopedFactory`).
+19. **The host cache entry carries the tenant's raw attributes** (`HostCache::HostEntry.tenant`)
+    so a warm request hydrates the model without a query (§11 budget p95 ≤ 2 ms). Every config
+    save, status change and domain write invalidates the tenant's hosts. TTL 10 min, negative
+    entries 60 s.
+20. **Subdomain rows store the full host `{slug}.{base}`** as §12 literally prescribes (§4's
+    "tenants store slug only" applies to the tenants table). `platform:domain:change` (Phase 7)
+    rewrites them and writes the redirect rules.
+21. **Slug conflicts are detected against tenants (deleted ones included), domain hosts and
+    active redirect sources.** A renamed-away or deleted slug therefore stays unavailable until
+    its redirect expires (90 days) or the purge runs (30 days) — nobody can take over a URL that
+    still redirects.
+22. **Two version numbers on a config:** `tenants.config_version` is the revision counter (+1 on
+    every save, per §9), `config["_schema"]` is the schema version `ConfigMigrator` upgrades
+    lazily (also §9). Reason: the spec describes both behaviours under one name.
+23. **JSON Schema validation with `opis/json-schema` (draft 2020-12) and phone normalisation
+    with `giggsey/libphonenumber-for-php`.** Alternatives: `justinrainbow/json-schema` (draft
+    7 only), a hand-written UAE regex. Reason: the schema in §9 is draft 2020-12; libphonenumber
+    is the reference implementation.
+24. **Locale on tenant sites: URL segment, else the first `Accept-Language` entry the site has
+    enabled, else the site's default.** `/` is a 302 (not 301) so a changed default is not stuck
+    in browser caches.
+25. **The on-demand TLS endpoint also checks the `Host` header is loopback** (Caddy's internal
+    listener sends `127.0.0.1:9080`), in addition to Caddy answering 404 for `/internal/*` on
+    public blocks — defence in depth for §11.
+26. **PHPStan does not analyse `tests/`** (Pest binds `$this` in closures, which static analysis
+    cannot see); tests are checked by Pint and by running them. Application code stays at level 6.
+27. **Coverage is measured on `app/Tenancy`, `app/Provisioning`, `app/Domains`, `app/Billing`
+    only** (phpunit.xml `<source>`), so `pest --coverage --min=90` enforces exactly the §19 gate.
+28. **Theme assets are built in a throwaway `node:22-alpine` container** (`build-assets.sh`)
+    during deploy; the host needs no Node.js, and fonts come from fontsource packages
+    (Inter Variable, IBM Plex Sans Arabic) so no request leaves the site (§10).
+29. **Demo listing images are generated SVG placeholders** (`public/demo/*.svg`) rather than
+    stock photos: no licensing question, 1 KB each, replaceable per theme in Phase 3.
+30. **The S0 landing page is served on the apex, `www` and `app.` hosts**; whichever of those
+    Caddy routes to the platform works, so the legacy-apex period (decision 6) needs no code change.

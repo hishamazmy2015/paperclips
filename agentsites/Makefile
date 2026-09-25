@@ -4,7 +4,7 @@ SHELL := /bin/bash
 COMPOSE ?= docker compose
 SCRIPTS := infra/scripts
 
-.PHONY: help env build up down restart ps logs shell deploy test lint stan pest check-domain render-caddy backup restore discover pre-platform-backup
+.PHONY: help env build assets site up down restart ps logs shell deploy test lint stan pest check-domain render-caddy backup restore discover pre-platform-backup
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -15,6 +15,12 @@ env: ## Create .env from .env.example (if missing) and link it into app/
 
 build: ## Build the app and caddy images
 	$(COMPOSE) build --pull app caddy
+
+assets: ## Build platform + theme CSS (Tailwind, self-hosted fonts) in a throwaway Node container
+	$(SCRIPTS)/build-assets.sh
+
+site: ## Create a live site: make site NAME="Ahmed Al Falasi" WHATSAPP=+9715XXXXXXXX [SLUG=ahmed]
+	$(COMPOSE) exec -T --user www-data app php artisan platform:site:create --name "$(NAME)" --whatsapp "$(WHATSAPP)" $(if $(SLUG),--slug "$(SLUG)",)
 
 up: env build ## Render the Caddyfile and start the stack (ports from .env; not 80/443 until cutover)
 	$(SCRIPTS)/render-caddy.sh
