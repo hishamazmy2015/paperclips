@@ -27,6 +27,16 @@ final class ThemeRegistry
         return in_array($key, $this->keys(), true);
     }
 
+    /**
+     * Themes that actually ship views (config may list themes that arrive in a later phase).
+     *
+     * @return list<string>
+     */
+    public function installed(): array
+    {
+        return array_values(array_filter($this->keys(), fn (string $key): bool => is_dir($this->path($key).'/views')));
+    }
+
     public function default(): string
     {
         return (string) config('themes.default', 'atlas');

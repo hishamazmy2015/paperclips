@@ -6,13 +6,11 @@ namespace App\Console\Commands\Platform;
 
 use App\Models\Account;
 use App\Models\Tenant;
-use App\Models\User;
+use App\Provisioning\AccountResolver;
 use App\Provisioning\Exceptions\InvalidProvisionInput;
 use App\Provisioning\Exceptions\SlugUnavailable;
-use App\Provisioning\PhoneNormalizer;
 use App\Provisioning\ProvisionInput;
 use App\Provisioning\ProvisionTenant;
-use Illuminate\Support\Facades\DB;
 
 /**
  * platform:site:create — spec §15 / acceptance test A1:
@@ -37,7 +35,7 @@ final class SiteCreateCommand extends PlatformCommand
 
     protected $description = 'Create a site (data only: no deploy, no restart) and publish it unless --draft';
 
-    public function handle(ProvisionTenant $provision, PhoneNormalizer $phones): int
+    public function handle(ProvisionTenant $provision, AccountResolver $accounts): int
     {
         $data = $this->inputData();
         if ($data === null) {
@@ -53,7 +51,7 @@ final class SiteCreateCommand extends PlatformCommand
         $before = Tenant::query()->count();
 
         try {
-            $account = $this->account($probe, $phones);
+            $account = $this->account($probe, $accounts);
             $tenant = $provision->handle(ProvisionInput::fromArray($data, $account->id, $publish));
         } catch (SlugUnavailable $e) {
             return $this->failWith($e->getMessage(), ['slug' => $e->slug, 'reason' => $e->reason, 'suggestions' => $e->suggestions]);
@@ -101,50 +99,10 @@ final class SiteCreateCommand extends PlatformCommand
     }
 
     /** The account to own the site: --account, else the agent's existing account (by phone or email), else a new trial account. */
-    private function account(ProvisionInput $input, PhoneNormalizer $phones): Account
+    private function account(ProvisionInput $input, AccountResolver $accounts): Account
     {
         $accountId = $this->option('account');
-        if (is_string($accountId) && $accountId !== '') {
-            return Account::query()->findOrFail((int) $accountId);
-        }
 
-        $phone = $phones->normalize($input->whatsapp);
-        $email = $input->email !== null ? strtolower($input->email) : null;
-        if ($phone !== null || $email !== null) {
-            $existing = User::query()
-                ->where(function ($q) use ($phone, $email): void {
-                    if ($phone !== null) {
-                        $q->orWhere('phone', $phone);
-                    }
-                    if ($email !== null) {
-                        $q->orWhere('email', $email);
-                    }
-                })
-                ->first();
-            if ($existing !== null) {
-                return $existing->account;
-            }
-        }
-
-        return DB::transaction(function () use ($input, $phone, $email): Account {
-            $account = Account::query()->create([
-                'type' => Account::TYPE_AGENT,
-                'plan_key' => (string) config('plans.default'),
-                'plan_status' => 'trialing',
-                'trial_ends_at' => now()->addDays((int) config('plans.trial_days')),
-                'locale' => $input->locale ?? (string) config('platform.default_locale'),
-            ]);
-            $user = $account->users()->create([
-                'name' => $input->name,
-                'email' => $email,
-                'phone' => $phone,
-                'role' => User::ROLE_OWNER,
-                'auth_provider' => 'cli',
-            ]);
-            $account->owner_user_id = $user->id;
-            $account->save();
-
-            return $account;
-        });
+        return $accounts->resolve($input, is_string($accountId) && $accountId !== '' ? (int) $accountId : null);
     }
 }

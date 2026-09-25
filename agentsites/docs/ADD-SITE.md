@@ -52,6 +52,39 @@ php artisan platform:events:partitions                  # monthly by the schedul
 
 All commands are idempotent: repeating one reports `created: false` and changes nothing.
 
+## Many sites at once: CSV import (spec §12, acceptance test A5)
+
+```sh
+php artisan platform:site:import samples/agents.csv --dry-run     # validate every row, create nothing
+php artisan platform:site:import samples/agents.csv               # one live site per row, batches of 100
+php artisan platform:site:import --resume=<run id>                # continue a killed run from its checkpoint
+php artisan platform:import:status [<run id>]                     # progress, counters, error file
+```
+
+- Columns: `name, whatsapp` (required), `agency, license, slug, theme, areas` (`;`-separated),
+  `email, locale, palette, years, languages, instagram, dark_mode, photo, tagline_en/ar,
+  bio_en/ar`. Anything else the schema knows can be added through `--config` JSON per site.
+- Rows run in batches through the queue (`--batch=100`); `import_runs` keeps the checkpoint
+  (`last_row`), so `--resume` picks up exactly where a killed worker stopped.
+- Bad rows never stop the run: they are listed in `<file>.errors.csv` (`row, slug, error`)
+  and counted in `error_rows`.
+- Re-importing the same file creates nothing (`existing_rows`), so the file can double as the
+  source of truth for a brokerage roster.
+
+### Generating a thousand different sites from one command
+
+```sh
+php artisan platform:site:generate --count=1000 --seed=42 --provision
+# → storage/app/generated-agents-42-1000.csv, imported: 1000 live sites, each a different agent
+php artisan platform:site:list --random --limit=10 --json         # sample them
+```
+
+The generator varies names (Arabic script, Arab and international Latin names), agencies,
+licenses, service areas, theme (only installed themes), palette, dark mode, default locale,
+languages, Instagram and years of experience; the same seed always yields the same CSV, so a
+data set is reproducible. `--draft` keeps them unpublished, `--out=` chooses the file. The
+Playwright suite (`npm run e2e`) uses exactly this to open generated sites in a mobile browser.
+
 ## What a site is made of
 
 - `tenants.config` (JSONB) holds only what was set; defaults from `config/tenant-defaults.php`

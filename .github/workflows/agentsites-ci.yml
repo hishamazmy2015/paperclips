@@ -119,3 +119,50 @@ jobs:
       - run: vendor/bin/pint --test
       - run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
       - run: vendor/bin/pest --ci --coverage --min=90
+
+  e2e:
+    name: Playwright (mobile viewport, generated sites by host)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agentsites/app
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: platform_e2e
+          POSTGRES_USER: platform
+          POSTGRES_PASSWORD: platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U platform -d platform_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, pgsql, intl, gd, zip, bcmath, pcntl
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: agentsites/app/package-lock.json
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-dev
+      - run: npm ci --no-audit --no-fund && npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Seed 200 generated sites and run the suite
+        env:
+          E2E_SITES: "200"
+        run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots
+          path: agentsites/app/tests/E2E/screenshots
+          if-no-files-found: ignore

@@ -105,3 +105,18 @@ also listed in `DISCOVERY.md` §6.
     stock photos: no licensing question, 1 KB each, replaceable per theme in Phase 3.
 30. **The S0 landing page is served on the apex, `www` and `app.` hosts**; whichever of those
     Caddy routes to the platform works, so the legacy-apex period (decision 6) needs no code change.
+31. **CSV import checkpoints per row in `import_runs.last_row`** and chains one queued job per
+    batch (`ImportBatch`), rather than one job per row or one job for the file. Alternatives:
+    Laravel job batches (heavier, no natural resume point). Reason: §12 asks for batches of 100
+    with a checkpoint table; a killed worker resumes with `--resume=<id>` and never re-creates a
+    site (provisioning is idempotent per account + slug anyway).
+32. **Uninstalled themes are import errors, not silently replaced** (`ThemeRegistry::installed()`
+    = themes that ship views). `config/themes.php` still lists marina and palm for Phase 3, so the
+    sample CSV uses atlas until they exist.
+33. **Synthetic agents come from a seeded generator (`platform:site:generate`)** using PHP's
+    `Random\Randomizer` with Xoshiro256** so the same seed reproduces the same CSV; names mix Arabic
+    script, Arab Latin and international names so slug transliteration and RTL get exercised.
+34. **Playwright runs against `php artisan serve` with Chromium's `--host-resolver-rules`** mapping
+    `*.example.test` to the local server, so sites are opened by host on a 375×667 mobile viewport
+    like a phone would. Alternatives: rewriting `Host` headers (Chromium ignores them for
+    navigation), `/etc/hosts` (not wildcard-capable). CI seeds 200 sites; locally 1000 (`E2E_SITES`).

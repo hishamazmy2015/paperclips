@@ -9,6 +9,9 @@
 /media/
 /infra/caddy/rendered/
 
+# platform:site:import writes <source>.errors.csv next to its source file
+*.errors.csv
+
 # Phase 0 discovery output (contains the base domain and host details)
 /discovery-*.md
 

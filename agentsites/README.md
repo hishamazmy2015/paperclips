@@ -7,13 +7,18 @@ under two minutes typing at most six fields (goal G2).
 
 `§n` below refers to sections of the master build specification.
 
-**Status: Phase 1 (Foundation) built and tested; Phase 0's server steps still pending.**
+**Status: Phase 1 (Foundation) built and tested, including bulk import, a 1000-agent generator
+and a Playwright mobile-browser suite; Phase 0's server steps still pending.**
 The latest phase report is in `docs/reports/`; what is known about the production server
 and what is still pending is in `docs/DISCOVERY.md`; every decision is in `docs/DECISIONS.md`.
 
 ```sh
 php artisan platform:site:create --name "Ahmed Al Falasi" --whatsapp +971501234567
 # → https://ahmed-al-falasi.{base}/  live, bilingual, demo listings, no restart (A1)
+
+php artisan platform:site:import samples/agents.csv          # one site per CSV row, batched, resumable (A5)
+php artisan platform:site:generate --count=1000 --provision  # 1000 different agents → 1000 live sites
+npm run e2e                                                  # Playwright opens them on a phone-sized Chromium
 ```
 
 ## Layout (§7)
