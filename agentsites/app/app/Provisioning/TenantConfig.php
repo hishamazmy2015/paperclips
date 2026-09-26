@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Provisioning;
 
+use App\Caching\PageCache;
 use App\Models\Tenant;
 use App\Provisioning\Exceptions\InvalidTenantConfig;
 use App\Tenancy\HostCache;
@@ -29,6 +30,7 @@ final class TenantConfig
     public function __construct(
         private readonly ConfigMigrator $migrator,
         private readonly HostCache $hosts,
+        private readonly PageCache $pages,
     ) {}
 
     public static function schemaPath(): string
@@ -136,6 +138,7 @@ final class TenantConfig
         // The edge caches the tenant with its config: a save must be visible on the next
         // request (site editor "live in ≤ 5 s", spec §14).
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
 
         return $tenant;
     }

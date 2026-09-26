@@ -121,7 +121,7 @@ jobs:
       - run: vendor/bin/pest --ci --coverage --min=90
 
   e2e:
-    name: Playwright (mobile viewport, generated sites by host)
+    name: Playwright + Lighthouse (mobile viewport, generated sites by host)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -160,9 +160,13 @@ jobs:
         env:
           E2E_SITES: "200"
         run: npm run e2e
+      - name: Lighthouse gates (three themes × two locales, mobile — spec §10)
+        run: npm run lighthouse
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: e2e-screenshots
-          path: agentsites/app/tests/E2E/screenshots
+          name: e2e-screenshots-and-lighthouse
+          path: |
+            agentsites/app/tests/E2E/screenshots
+            agentsites/app/tests/E2E/lighthouse.json
           if-no-files-found: ignore

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Caching\PurgesSitePages;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\MediaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['tenant_id', 'disk', 'path', 'mime', 'size_bytes', 'width', 'height', 'variants', 'alt_en', 'alt_ar', 'sha256'])]
 class Media extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, PurgesSitePages;
 
     /** @use HasFactory<MediaFactory> */
     use HasFactory, SoftDeletes;

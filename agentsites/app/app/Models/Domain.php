@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Caching\PurgesSitePages;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\DomainFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['tenant_id', 'host', 'type', 'role', 'verified', 'verification_token', 'dns_status', 'ssl_status', 'last_checked_at', 'last_error'])]
 class Domain extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, PurgesSitePages;
 
     /** @use HasFactory<DomainFactory> */
     use HasFactory, SoftDeletes;

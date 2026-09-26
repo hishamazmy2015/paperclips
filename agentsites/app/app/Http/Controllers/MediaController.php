@@ -18,7 +18,7 @@ final class MediaController extends Controller
 {
     public function __invoke(Request $request, MediaStore $store, string $path): BinaryFileResponse
     {
-        if (preg_match('#^(\d+)/([A-Za-z0-9._-]+)$#', $path, $m) !== 1) {
+        if (preg_match('#^(\d+)/([A-Za-z0-9._/-]+)$#', $path, $m) !== 1 || str_contains($path, '..') || str_contains($path, '//')) {
             abort(404);
         }
         $tenantId = (int) $m[1];

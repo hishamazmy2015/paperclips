@@ -1,6 +1,6 @@
 <x-site.layout :site="$site" :title="__('site.nav.listings')" canonical-path="listings">
     <section class="section">
-        <x-site.section-heading :title="__('site.nav.listings')" />
+        <x-site.section-heading level="1" :title="__('site.nav.listings')" />
 
         <form method="get" class="card mb-8 grid gap-3 p-4 sm:grid-cols-4" aria-label="{{ __('site.listing.filters') }}">
             <select name="offering" class="rounded-xl border border-line bg-surface px-3 py-2">

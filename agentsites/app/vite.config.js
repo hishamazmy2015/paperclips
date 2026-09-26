@@ -11,6 +11,8 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/themes/atlas/theme.css',
+                'resources/themes/marina/theme.css',
+                'resources/themes/palm/theme.css',
             ],
             refresh: true,
         }),

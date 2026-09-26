@@ -1,0 +1,16 @@
+{
+  "key": "marina",
+  "name": "Marina",
+  "version": "1.0.0",
+  "description": "Split hero (photo left, text right), horizontal listing cards, light.",
+  "rtl": true,
+  "dark_capable": false,
+  "pages": ["home", "listings", "listing", "about", "area", "contact", "404", "paused"],
+  "sections": ["hero", "featured", "about", "areas", "testimonials", "services", "stats", "cta", "contact", "map", "instagram", "blog"],
+  "palettes": ["sand", "navy", "emerald", "charcoal", "rose", "gold"],
+  "fonts": {
+    "latin": "Inter Variable",
+    "arabic": "IBM Plex Sans Arabic"
+  },
+  "preview": "preview.svg"
+}

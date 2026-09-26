@@ -51,7 +51,9 @@ final class SiteRenderer
     public function listings(): Builder
     {
         $query = Listing::query()->available();
-        $hasReal = Listing::query()->available()->real()->exists();
+        // samples stay only until the agent has any real listing: a hidden or sold one is still theirs,
+        // and resurrecting sample inventory on a managed site would mislead visitors (spec §14)
+        $hasReal = Listing::query()->real()->exists();
         $showDemo = (bool) ($this->site()->config['listings']['show_demo_until_real'] ?? true);
 
         if ($hasReal || ! $showDemo) {

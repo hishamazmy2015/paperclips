@@ -7,9 +7,12 @@ use App\Http\Controllers\Site\ContactController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ListingsController;
 use App\Http\Controllers\Site\LocaleRedirectController;
+use App\Http\Controllers\Site\RobotsController;
+use App\Http\Controllers\Site\SitemapController;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\SiteHeaders;
+use App\Http\Middleware\SitePageCache;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,9 +22,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([ResolveTenant::class, SiteHeaders::class])->group(function (): void {
+Route::middleware([ResolveTenant::class, SitePageCache::class, SiteHeaders::class])->group(function (): void {
     Route::get('/', LocaleRedirectController::class)->name('site.root');
     Route::get('/media/{path}', MediaController::class)->where('path', '.*')->name('site.media');
+    Route::get('/sitemap.xml', SitemapController::class)->name('site.sitemap');
+    Route::get('/robots.txt', RobotsController::class)->name('site.robots');
 
     Route::prefix('{locale}')->where(['locale' => 'ar|en'])->middleware(SetLocale::class)->group(function (): void {
         Route::get('/', HomeController::class)->name('site.home');

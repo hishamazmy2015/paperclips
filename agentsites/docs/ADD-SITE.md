@@ -105,3 +105,29 @@ Playwright suite (`npm run e2e`) uses exactly this to open generated sites in a 
 
 `platform:site:delete` keeps the data 30 days (`platform:site:restore` brings it back);
 `platform:purge` then hard-deletes it. The slug and host stay reserved until the purge.
+
+## Regenerating (page cache, spec §16, acceptance test A5)
+
+Every live site is served from a full-page cache (host + path + locale + query, 1 h, `ETag`,
+`Cache-Control: public, max-age=60`; `X-Cache: HIT|MISS`). The cache is purged for one site on
+every config save, publish, lifecycle change, listing, testimonial, domain or media write, so
+normal operation never needs a command. A template or stylesheet change on a running platform
+does (`deploy.sh` runs it):
+
+```sh
+php artisan platform:site:regenerate ahmed-al-falasi         # one site: purge + warm its main pages
+php artisan platform:site:regenerate --all                    # every live site, batches of 50 through the queue
+php artisan platform:site:regenerate --all --no-warm          # purge only
+php artisan platform:site:regenerate --resume=3               # continue a killed --all run
+php artisan platform:site:regenerate --status=3               # progress of a run
+```
+
+`--all` records a `regenerate_runs` row (last tenant id, counts) so a run survives a restart and
+resumes where it stopped; warming renders every enabled locale's home, listings, about, contact
+and area pages in-process through the public origin (`app.url` scheme + port), so a warmed
+page is byte-for-byte what a visitor gets. Timing: see the Phase 3 report.
+
+## Listings and feeds
+
+See [LISTINGS.md](LISTINGS.md): `platform:listings:import {slug} {file} [--dry-run] [--no-media]`
+and `platform:feeds:sync [--feed=] [--tenant=] [--due]`. Themes: [THEMES.md](THEMES.md).

@@ -14,7 +14,7 @@ return [
 
     'palettes' => [
         'sand' => [
-            'primary' => '#9a6b2f', 'primary_contrast' => '#ffffff', 'secondary' => '#3f3a33', 'accent' => '#c8963e',
+            'primary' => '#8f6229', 'primary_contrast' => '#ffffff', 'secondary' => '#3f3a33', 'accent' => '#c8963e',
             'background' => '#fbf7f0', 'surface' => '#ffffff', 'text' => '#1f1b16', 'muted' => '#6b625a', 'border' => '#e8dfd0',
             'dark_background' => '#161311', 'dark_surface' => '#211d19', 'dark_text' => '#f3ede4', 'dark_muted' => '#b3a89b', 'dark_border' => '#332d27',
         ],

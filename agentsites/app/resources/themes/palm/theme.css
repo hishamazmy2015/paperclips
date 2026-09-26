@@ -1,0 +1,52 @@
+/* Palm theme (spec §10): editorial — large type, generous whitespace, hairlines instead of
+   cards, the palette's accent as the one colour. Light only. */
+@import "tailwindcss";
+
+@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/500.css";
+@import "@fontsource/ibm-plex-sans-arabic/700.css";
+
+@source "../../views/components/site";
+@source "./views";
+
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-primary-contrast: var(--c-primary-contrast);
+  --color-secondary: var(--c-secondary);
+  /* the palette accent is a highlight colour; as text (eyebrows, prices, stars) it is
+     darkened towards the ink so every palette keeps ≥ 4.5:1 on the page (WCAG AA) */
+  --color-accent: color-mix(in oklab, var(--c-accent) 62%, var(--c-text));
+  --color-accent-soft: var(--c-accent);
+  --color-page: var(--c-background);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-border);
+  --font-sans: "Inter Variable", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Variable", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  html[dir="rtl"] body { font-family: var(--font-arabic); }
+  body { background: var(--color-page); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; height: auto; }
+  :focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+}
+
+@layer components {
+  .btn, .btn-primary, .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-none px-6 py-3 text-base font-semibold tracking-wide transition-colors; }
+  .btn-primary { @apply bg-ink text-page hover:bg-accent-soft hover:text-ink; }
+  .btn-outline { @apply border border-ink text-ink hover:bg-ink hover:text-page; }
+  .card { @apply border-t border-line pt-5; }
+  .section { @apply mx-auto w-full max-w-3xl px-5 py-12 sm:px-6 lg:py-20; }
+  .eyebrow { @apply text-xs font-semibold tracking-[0.2em] text-accent uppercase; }
+  .h2 { @apply text-3xl font-bold tracking-tight sm:text-4xl; }
+  .display { @apply text-5xl font-bold leading-[1.02] tracking-tighter sm:text-7xl; }
+  .lede { @apply text-xl leading-relaxed text-muted sm:text-2xl; }
+  .prose-site p { @apply mb-5 text-lg leading-relaxed text-ink; }
+  .rule { @apply border-t border-line; }
+  .gold-link { @apply font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent; }
+}

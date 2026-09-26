@@ -1,5 +1,6 @@
 <x-layouts.app :title="__('platform.home.title')">
     <section class="app-card" data-test="home">
+        @unless ($tenant->isDraft())<x-app-nav active="home" />@endunless
         <h1 class="app-h1">{{ $tenant->displayName() }}</h1>
         <p class="app-lead">
             <span class="app-status app-status-{{ $tenant->status }}">{{ __('platform.home.status_'.$tenant->status) }}</span>

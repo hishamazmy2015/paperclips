@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Provisioning;
 
+use App\Caching\PageCache;
 use App\Models\Domain;
 use App\Models\Tenant;
 use App\Platform\Audit;
@@ -24,6 +25,7 @@ final class TenantLifecycle
 
     public function __construct(
         private readonly HostCache $hosts,
+        private readonly PageCache $pages,
         private readonly RedirectRules $redirects,
         private readonly Slugs $slugs,
         private readonly Audit $audit,
@@ -35,6 +37,7 @@ final class TenantLifecycle
         $tenant->status = Tenant::STATUS_SUSPENDED;
         $tenant->save();
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
         $this->audit->record('tenant.suspended', ['reason' => $reason], tenant: $tenant, account: $tenant->account, targetType: Tenant::class, targetId: $tenant->id);
         $this->events->record('tenant.suspended', ['reason' => $reason], tenant: $tenant, account: $tenant->account);
 
@@ -50,6 +53,7 @@ final class TenantLifecycle
         $tenant->status = $tenant->published_at === null ? Tenant::STATUS_DRAFT : Tenant::STATUS_LIVE;
         $tenant->save();
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
         $this->audit->record('tenant.restored', [], tenant: $tenant, account: $tenant->account, targetType: Tenant::class, targetId: $tenant->id);
         $this->events->record('tenant.restored', [], tenant: $tenant, account: $tenant->account);
 
@@ -68,6 +72,7 @@ final class TenantLifecycle
             $this->events->record('tenant.deleted', ['reason' => $reason], tenant: $tenant, account: $tenant->account);
         });
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
 
         return $tenant;
     }
@@ -110,6 +115,7 @@ final class TenantLifecycle
 
         $this->hosts->forgetHost($oldHost);
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
 
         return $tenant;
     }
@@ -153,6 +159,7 @@ final class TenantLifecycle
 
         $this->hosts->forgetHost($oldHost);
         $this->hosts->forgetTenant($tenant);
+        $this->pages->purgeTenant($tenant);
 
         return $tenant;
     }

@@ -7,11 +7,10 @@ under two minutes typing at most six fields (goal G2).
 
 `§n` below refers to sections of the master build specification.
 
-**Status: Phase 2 (Onboarding) built and tested — sign-in without passwords, the three-step
-wizard with live preview, publish, success screen, reminders and funnel; Phase 0's server steps
-still pending.**
-The latest phase report is in `docs/reports/`; what is known about the production server
-and what is still pending is in `docs/DISCOVERY.md`; every decision is in `docs/DECISIONS.md`.
+**Status: Phase 3 (Themes / SEO / Listings) built and tested — three themes (atlas, marina,
+palm) with RTL and palettes, listings management with photos, CSV import and feeds (Generic XML,
+Property Finder), a full-page cache with `site:regenerate --all`, per-tenant sitemap/robots and
+structured data, Lighthouse and Playwright gates; Phase 0's server steps are still pending.**
 
 ```sh
 php artisan platform:site:create --name "Ahmed Al Falasi" --whatsapp +971501234567
@@ -36,7 +35,7 @@ your website → go live → published. See `docs/ONBOARDING.md`.
 | `infra/app/` | PHP 8.3 FPM image, `php.ini`, pool config |
 | `infra/scripts/` | Idempotent bash: `bootstrap`, `deploy`, `build-assets`, `backup`, `restore`, `render-caddy`, `rotate-logs`, `check-base-domain`, plus Phase 0 `discover` and `pre-platform-backup` |
 | `app/` | Laravel 13: `app/Tenancy` (context, scope, host cache, resolver), `app/Provisioning` (the single write path), `app/Auth` (codes, magic link, Google, Turnstile), `app/Livewire/Onboarding` (the wizard), `app/Content` (template + Claude generators), `app/Messaging` (WhatsApp notifiers), `app/Media`, `app/Themes`, `app/Http`, `app/Console/Commands/Platform` (`platform:*` CLI), 23 migrations, `resources/themes/atlas`, `lang/{ar,en}` |
-| `docs/` | `DISCOVERY.md`, `DECISIONS.md`, `ADD-SITE.md`, `ONBOARDING.md`, phase reports |
+| `docs/` | `DISCOVERY.md`, `DECISIONS.md`, `ADD-SITE.md`, `ONBOARDING.md`, `THEMES.md`, `LISTINGS.md`, phase reports |
 | `samples/` | `agents.csv`, `agent.json`, `listings.csv` |
 
 ## Run it

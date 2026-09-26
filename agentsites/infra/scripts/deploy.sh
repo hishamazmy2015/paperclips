@@ -44,6 +44,9 @@ compose exec -T horizon php artisan horizon:terminate || true
 log "rendering the Caddyfile and reloading Caddy"
 "${SCRIPT_DIR}/render-caddy.sh" --reload
 
+log "page cache: purge every site and re-warm in batches through the queue (templates changed — spec §16)"
+app_exec php artisan platform:site:regenerate --all --no-interaction
+
 log "health"
 app_exec php artisan platform:health --json
 log "deploy complete"

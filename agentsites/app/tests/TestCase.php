@@ -18,9 +18,12 @@ abstract class TestCase extends BaseTestCase
         $this->withoutVite();
     }
 
-    /** A tenant with its subdomain host row, the way provisioning creates it. */
+    /** A tenant with its subdomain host row, the way provisioning creates it (live = published, so indexable). */
     protected function makeTenant(string $slug, string $status = Tenant::STATUS_LIVE, array $config = []): Tenant
     {
+        if ($status === Tenant::STATUS_LIVE && ! isset($config['seo']['noindex'])) {
+            $config['seo']['noindex'] = false;
+        }
         $tenant = Tenant::factory()
             ->for(Account::factory())
             ->withConfig($config)

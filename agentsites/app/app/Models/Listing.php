@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Caching\PurgesSitePages;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\ListingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['tenant_id', 'ref', 'title_en', 'title_ar', 'description_en', 'description_ar', 'offering', 'property_type', 'price', 'currency', 'bedrooms', 'bathrooms', 'area_sqft', 'community', 'city', 'lat', 'lng', 'status', 'source', 'feed_id', 'feed_ref', 'featured', 'media'])]
 class Listing extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, PurgesSitePages;
 
     /** @use HasFactory<ListingFactory> */
     use HasFactory, SoftDeletes;
@@ -84,24 +85,46 @@ class Listing extends Model
         return $locale === 'ar' && $ar !== '' ? $ar : (string) ($this->description_en ?? '');
     }
 
-    /** @return list<string> */
+    /**
+     * Gallery URLs (the hero variant when the photo was processed, else the stored URL).
+     *
+     * @return list<string>
+     */
     public function images(): array
+    {
+        return array_values(array_filter(array_map(static fn (array $set): string => $set['hero'], $this->imageSets())));
+    }
+
+    /**
+     * thumb / card / hero per photo (spec §16). Plain URL entries (demo, CSV, feeds whose media
+     * could not be cached) use the same URL for every size.
+     *
+     * @return list<array{thumb: string, card: string, hero: string}>
+     */
+    public function imageSets(): array
     {
         /** @var array<int, mixed> $media */
         $media = $this->getAttribute('media') ?? [];
-        $urls = [];
+        $sets = [];
         foreach ($media as $item) {
-            $url = is_array($item) ? (string) ($item['url'] ?? '') : (string) $item;
-            if ($url !== '') {
-                $urls[] = $url;
+            if (is_array($item)) {
+                $variants = (array) ($item['variants'] ?? []);
+                $fallback = (string) ($item['path'] ?? $item['url'] ?? $item['remote'] ?? '');
+                $hero = (string) ($variants['hero'] ?? $fallback);
+                if ($hero === '') {
+                    continue;
+                }
+                $sets[] = ['thumb' => (string) ($variants['thumb'] ?? $hero), 'card' => (string) ($variants['card'] ?? $hero), 'hero' => $hero];
+            } elseif (is_string($item) && $item !== '') {
+                $sets[] = ['thumb' => $item, 'card' => $item, 'hero' => $item];
             }
         }
 
-        return $urls;
+        return $sets;
     }
 
     public function coverImage(): ?string
     {
-        return $this->images()[0] ?? null;
+        return $this->imageSets()[0]['card'] ?? null;
     }
 }

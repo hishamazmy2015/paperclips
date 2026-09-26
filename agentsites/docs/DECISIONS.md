@@ -165,3 +165,60 @@ also listed in `DISCOVERY.md` §6.
 44. **The site's default locale becomes the UI language the agent published in.** The wizard
     exposes no locale field (≤ 6 typed fields); the dashboard (Phase 4) can change it.
 
+45. **Full-page cache = per-tenant version keys, not cache tags** (2026-09-26, Phase 3). Every
+    page key folds in `page:ver:{tenant}` + `page:ver:all`; a purge is one write and works the
+    same on Redis, file and array stores (tests, staging without Redis). TTL 1 h, `ETag`/304,
+    `Cache-Control: public, max-age=60` (a visitor's browser may keep a page for a minute after
+    an edit; the ETag revalidates after that). Only anonymous GET/HEAD on live sites are cached;
+    previews, signed-in requests and the app host never are. Alternative: Redis tags (one store
+    only, scans on purge).
+46. **Warming happens only in a console process** (`SiteWarmer::available()`), as in-process
+    kernel requests, never from a web request; the request URL uses the public origin derived
+    from `app.url` (scheme + port) so warmed pages carry the same absolute asset URLs as pages
+    rendered for a visitor (`Hosts::publicOrigin`). `APP_URL` is therefore set to
+    `http://app.{base}:8123` in the E2E environment.
+47. **`regenerate_runs` is the same checkpoint pattern as `import_runs`**: `--all` walks tenants by
+    id in batches of 50 through queued jobs, records `last_tenant_id` and counts, resumes by id;
+    a run is final only when completed (a failed one can be resumed).
+48. **Listing media entries are `{path, variants{thumb,card,hero}, width, height, source}` or a plain
+    URL string.** Variants 400 / 800 / 1600 WebP from one upload; feed and CSV photos are fetched
+    and cached into the tenant directory by default (`--no-media` / "cache photos" keeps the URL).
+    Alternative: a `media` table row per photo — more joins, nothing extra to show in V1.
+49. **Plan limits are read from `config/plans.php`** (`PlanLimits`); the `plans` table only mirrors
+    them. The listings limit counts real listings only and is enforced in the form, the importer
+    and the feed sync with one message. Billing (Phase 5) changes the account's plan, nothing else.
+50. **A listing that leaves a feed is hidden, not deleted** (status `hidden`, `feed_ref` kept), so a
+    broken export never destroys photos or URLs; the agent can delete it. Feeds sync every 30
+    minutes (`SyncDueFeeds`), credentials are an `encrypted:array` cast, filters are per agent
+    (offering, price range, property types, communities).
+51. **SEO surface per tenant from routes, not files**: `sitemap.xml` (real listings and areas,
+    hreflang alternates, demo listings excluded) and `robots.txt` (Allow + Sitemap when live and
+    indexable, `Disallow: /` otherwise). Laravel's static `public/robots.txt` was removed because
+    Caddy's `file_server` (and `artisan serve`) would serve it before the route.
+52. **`seo.title_pattern`** (`{name} — {agency} | {area}` by default; `{tagline}` available): empty
+    parts and their separators collapse, so a solo agent gets "Name | Area", not "Name —  | Area".
+53. **Dark mode only where the manifest says `dark_capable`** (atlas today). Marina and palm are
+    designed light; the tenant's `dark_mode` flag is kept and ignored there.
+54. **Palm is testimonials-forward by code, not by config**: the home page includes the
+    testimonials section right after the hero whatever the section order says. Alternative: a
+    theme-specific default order — would drift the moment the agent reorders sections.
+55. **Sample listings stay only until the agent has any real listing** (hidden and sold ones count).
+    Previously only *available* real listings counted, so hiding your only listing brought the
+    samples back — misleading on a managed site.
+56. **Every page has exactly one `h1`**: `x-site.section-heading` takes `level="1"` for the page
+    heading (listings, about, area, contact). Needed for the accessibility gate and plain semantics.
+57. **Lighthouse runs through the node API** (`tests/E2E/lighthouse.mjs`, `npm run lighthouse`):
+    three gate sites × two locales on the mobile profile, thresholds 90 / 95 / 95, results in
+    `tests/E2E/lighthouse.json`, non-zero exit on a miss; CI runs it after Playwright. Alternative:
+    Lighthouse CI with its server — more moving parts for the same numbers.
+58. **Accessibility and CLS fixes are structural, not per-site** (Lighthouse gate run, 2026-09-26):
+    palette contrast is a unit test (`tests/Unit/PalettesContrastTest`, every text pair ≥ 4.5:1;
+    sand's primary darkened from `#9a6b2f` to `#8f6229`); palm darkens the palette accent with
+    `color-mix()` wherever it is text (eyebrows, prices, stars) and keeps the light accent for
+    button hovers; phone links render only when the site has a phone (an empty `tel:` link has
+    no accessible name); the locale's primary font files are `<link rel="preload">`ed from the
+    Vite manifest so the web font is there at first paint (CLS from font swap was 0.11–0.30);
+    the first featured listing image loads eagerly with `fetchpriority="high"` (it is the LCP
+    element whenever the hero has no photo). The cache warmer runs through the public origin
+    (#46) after a first run cached pages whose asset URLs pointed at `https://host` on an http
+    dev server — the styled-page check in `tests/E2E/themes.spec.js` would have caught it in CI.

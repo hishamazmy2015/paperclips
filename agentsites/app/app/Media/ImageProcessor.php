@@ -58,6 +58,24 @@ final class ImageProcessor
     }
 
     /**
+     * Listing photo variants (spec §16): thumb / card / hero WebP, fitted inside 400 / 800 / 1600 px.
+     *
+     * @return array{thumb: string, card: string, hero: string, width: int, height: int}
+     */
+    public function variants(string $binary): array
+    {
+        $image = $this->decode($binary);
+
+        return [
+            'thumb' => $this->fitWebp($binary, 400, 78),
+            'card' => $this->fitWebp($binary, 800, 80),
+            'hero' => $this->fitWebp($binary, 1600, 82),
+            'width' => imagesx($image),
+            'height' => imagesy($image),
+        ];
+    }
+
+    /**
      * The dominant saturated colour of an image as #rrggbb (spec §13 S3 "From my logo"):
      * pixels are sampled on a small grid, near-white/black and grey pixels ignored, hues
      * bucketed and the strongest bucket averaged. Null when the image has no colour at all.

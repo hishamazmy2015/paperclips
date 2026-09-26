@@ -2,7 +2,7 @@
     <section class="section">
         <div class="grid gap-10 md:grid-cols-3">
             <div class="md:col-span-2">
-                <x-site.section-heading :eyebrow="$site->agency()" :title="__('site.sections.about', ['name' => $site->name])" />
+                <x-site.section-heading level="1" :eyebrow="$site->agency()" :title="__('site.sections.about', ['name' => $site->name])" />
                 <div class="prose-site max-w-none">
                     <p>{{ $site->bio() }}</p>
                     <p>{{ $site->about() }}</p>

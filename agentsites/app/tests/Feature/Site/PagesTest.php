@@ -32,7 +32,7 @@ it('renders the home page in English and Arabic with the right direction', funct
         ->assertSee('Sample listing')
         ->assertSee('href="/ar"', false)
         ->assertSee('wa.me/971', false)
-        ->assertSee('--c-primary:#9a6b2f', false);
+        ->assertSee('--c-primary:#8f6229', false);
 
     $this->get('http://ahmed.example.test/ar')
         ->assertOk()
@@ -85,6 +85,9 @@ it('uses the tenant palette and dark-mode setting', function (): void {
 });
 
 it('marks a noindex site in the headers and the head', function (): void {
+    $stored = $this->tenant->config;
+    $stored['seo']['noindex'] = true;
+    app(TenantConfig::class)->save($this->tenant, $stored);
     $this->get('http://ahmed.example.test/en')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow')->assertSee('name="robots" content="noindex, nofollow"', false);
 
     $stored = $this->tenant->config;

@@ -5,8 +5,10 @@
 | [DISCOVERY.md](DISCOVERY.md) | partial (server inventory pending) | Phase 0 findings, coexistence plan, risks, proposed deviations |
 | [DECISIONS.md](DECISIONS.md) | live | Every decision: date, decision, alternatives, reason |
 | [reports/](reports/) | live | One report per phase stop, in the spec's §20 format |
-| [ADD-SITE.md](ADD-SITE.md) | live | How a site is created, published and managed from the CLI |
-| ONBOARDING-FLOW.md | Phase 2 | Screen-by-screen flow and funnel events |
+| [ADD-SITE.md](ADD-SITE.md) | live | How a site is created, published, regenerated and managed from the CLI |
+| [THEMES.md](THEMES.md) | live | The three themes, manifests, rendering, CSS, quality gates, adding a theme |
+| [LISTINGS.md](LISTINGS.md) | live | Manual listings, photos, CSV import, feeds (Generic XML, Property Finder), plan limits |
+| [ONBOARDING.md](ONBOARDING.md) | live | Screen-by-screen flow, providers and funnel events |
 | CHANGE-DOMAIN.md | Phase 7 | `platform:domain:change` runbook |
 | CUSTOM-DOMAINS.md | Phase 4 | Agent-facing and operator-facing custom domain guide |
 | BILLING.md | Phase 5 | Plans, state machine, webhooks, invoices |

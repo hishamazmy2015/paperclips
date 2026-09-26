@@ -1,6 +1,6 @@
 @php($title = $listing->title($site->locale))
 @php($enquiry = __('site.whatsapp_listing', ['title' => $title, 'ref' => $listing->ref]))
-<x-site.layout :site="$site" :title="$title" :description="\Illuminate\Support\Str::limit($listing->description($site->locale), 160, '')" :canonical-path="'listings/'.$listing->ref">
+<x-site.layout :site="$site" :title="$title" :description="\Illuminate\Support\Str::limit($listing->description($site->locale), 160, '')" :canonical-path="'listings/'.$listing->ref" :json-ld="$listing->isDemo() ? null : $site->offerJsonLd($listing)" :og-image="$listing->coverImage()">
     <article class="section">
         @if ($listing->images() !== [])
             <div class="grid gap-3 md:grid-cols-3">
@@ -51,9 +51,6 @@
         @endif
     </article>
 
-    @unless ($listing->isDemo())
-        {{-- schema.org Offer for real listings only; demo listings never carry structured data (spec §14). --}}
-        <script type="application/ld+json">{!! json_encode($site->offerJsonLd($listing), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
-    @endunless
+    {{-- schema.org Offer for real listings only (layout json-ld); demo listings never carry structured data (spec §14). --}}
     <x-site.whatsapp-bar :site="$site" :text="$enquiry" />
 </x-site.layout>

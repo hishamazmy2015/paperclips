@@ -6,7 +6,7 @@
     </div>
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($featured as $listing)
-            <x-site.listing-card :site="$site" :listing="$listing" />
+            <x-site.listing-card :site="$site" :listing="$listing" :eager="$loop->first" />
         @endforeach
     </div>
 </section>

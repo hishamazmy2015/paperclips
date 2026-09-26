@@ -1,6 +1,6 @@
 <x-site.layout :site="$site" :title="__('site.area.title', ['area' => $area])" :description="__('site.area.intro', ['area' => $area, 'name' => $site->name])" :canonical-path="'areas/'.\Illuminate\Support\Str::slug($area)">
     <section class="section">
-        <x-site.section-heading :eyebrow="__('site.nav.areas')" :title="__('site.area.title', ['area' => $area])" />
+        <x-site.section-heading level="1" :eyebrow="__('site.nav.areas')" :title="__('site.area.title', ['area' => $area])" />
         <p class="mb-8 max-w-2xl text-lg text-muted">{{ __('site.area.intro', ['area' => $area, 'name' => $site->name]) }}</p>
         @if ($listings->isEmpty())
             <p class="text-muted">{{ __('site.listing.no_results') }}</p>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Caching\PurgesSitePages;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\TestimonialFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['tenant_id', 'author_name', 'author_role', 'text_en', 'text_ar', 'rating', 'photo', 'featured', 'sort_order'])]
 class Testimonial extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, PurgesSitePages;
 
     /** @use HasFactory<TestimonialFactory> */
     use HasFactory, SoftDeletes;

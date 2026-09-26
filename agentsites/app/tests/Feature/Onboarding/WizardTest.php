@@ -95,17 +95,20 @@ it('checks the subdomain live, suggests alternatives and moves the host row on N
     expect($hosts)->toBe(['ahmed-al-falasi.example.test']);
 });
 
-it('selects an installed theme and a palette; themes without views stay disabled', function (): void {
+it('selects any of the three themes and a palette; unknown themes are ignored', function (): void {
     $this->tenant->update(['onboarding_step' => 2]);
 
     $component = Livewire::test(Wizard::class, ['step' => 2])
         ->assertSeeHtml('data-test="theme-atlas"')
         ->assertSeeHtml('data-test="theme-marina"')
-        ->assertSee('coming soon');
+        ->assertSeeHtml('data-test="theme-palm"')
+        ->assertDontSee('coming soon');
 
-    $component->call('selectTheme', 'marina')->assertSet('theme', 'atlas');
+    $component->call('selectTheme', 'nope')->assertSet('theme', 'atlas');
+    $component->call('selectTheme', 'marina')->assertSet('theme', 'marina');
+    expect($this->tenant->fresh()->theme_key)->toBe('marina');
     $component->call('selectTheme', 'atlas')->assertSet('theme', 'atlas');
-    expect(events('theme.selected'))->toEqual([['theme' => 'atlas']]);
+    expect(events('theme.selected'))->toEqual([['theme' => 'marina'], ['theme' => 'atlas']]);
 
     $component->call('selectPalette', 'navy')->assertSet('palette', 'navy');
     expect($this->tenant->fresh()->config['branding']['palette'])->toBe('navy');

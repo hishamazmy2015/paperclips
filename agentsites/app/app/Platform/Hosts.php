@@ -63,11 +63,29 @@ final class Hosts
     public static function browserOrigin(string $host): string
     {
         if (! app()->bound('request') || (app()->runningInConsole() && ! app()->runningUnitTests())) {
-            return 'https://'.$host;
+            return self::publicOrigin($host);
         }
         $request = request();
-        $scheme = $request->getScheme();
-        $port = (int) $request->getPort();
+
+        return self::origin($request->getScheme(), $host, (int) $request->getPort());
+    }
+
+    /**
+     * The origin a browser reaches a host on when there is no request to copy it from (queued
+     * jobs, the cache warmer): the scheme and port of `app.url` (https, no port, in production;
+     * http://…:8123 in the E2E environment), so warmed pages carry the same absolute asset URLs
+     * as pages rendered for a visitor.
+     */
+    public static function publicOrigin(string $host): string
+    {
+        $app = parse_url((string) config('app.url')) ?: [];
+        $scheme = strtolower((string) ($app['scheme'] ?? 'https')) === 'http' ? 'http' : 'https';
+
+        return self::origin($scheme, $host, (int) ($app['port'] ?? 0));
+    }
+
+    private static function origin(string $scheme, string $host, int $port): string
+    {
         $default = $scheme === 'https' ? 443 : 80;
 
         return $scheme.'://'.$host.($port !== 0 && $port !== $default ? ':'.$port : '');

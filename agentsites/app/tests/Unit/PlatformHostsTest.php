@@ -56,3 +56,14 @@ it('reads the real config from the environment', function (): void {
         ->and($fresh['locales'])->toBe(['ar', 'en'])
         ->and($fresh['currency'])->toBe('AED');
 });
+
+it('derives the public origin of any host from app.url when there is no request to copy', function (): void {
+    config(['app.url' => 'https://app.example.test']);
+    expect(Hosts::publicOrigin('ahmed.example.test'))->toBe('https://ahmed.example.test');
+    config(['app.url' => 'http://app.example.test:8123']);
+    expect(Hosts::publicOrigin('ahmed.example.test'))->toBe('http://ahmed.example.test:8123');
+    config(['app.url' => 'http://app.example.test:80']);
+    expect(Hosts::publicOrigin('ahmed.example.test'))->toBe('http://ahmed.example.test');
+    config(['app.url' => '']);
+    expect(Hosts::publicOrigin('ahmed.example.test'))->toBe('https://ahmed.example.test');
+});

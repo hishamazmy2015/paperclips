@@ -1,5 +1,5 @@
 @php($hero = $site->config['branding']['hero_image'] ?? '')
-<section class="relative isolate overflow-hidden bg-secondary text-white">
+<section class="relative isolate overflow-hidden bg-secondary text-white" id="hero">
     @if ($hero !== '')
         <img src="{{ $hero }}" alt="" class="absolute inset-0 -z-10 size-full object-cover opacity-60" fetchpriority="high" width="1600" height="900">
     @else

@@ -6,7 +6,7 @@ window.agentsitesConfetti = function (canvas) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const resize = () => { canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; };
     resize();
-    const colors = ['#9a6b2f', '#c8963e', '#1e3a8a', '#0f766e', '#9f1239', '#d4af37', '#25d366'];
+    const colors = ['#8f6229', '#c8963e', '#1e3a8a', '#0f766e', '#9f1239', '#d4af37', '#25d366'];
     const pieces = Array.from({ length: 140 }, () => ({
         x: Math.random() * canvas.width,
         y: -Math.random() * canvas.height * 0.5,

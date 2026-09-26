@@ -189,11 +189,29 @@ final class SiteContext
         return $this->tenant->isDraft() || (bool) ($this->config['seo']['noindex'] ?? false);
     }
 
+    /**
+     * <title>: the home page follows seo.title_pattern ({name}, {agency}, {area}, {tagline});
+     * inner pages are "Page | Name — Agency" (spec §16).
+     */
     public function title(string $pageTitle = ''): string
     {
         $base = $this->agency() !== '' ? $this->name.' — '.$this->agency() : $this->name;
+        if ($pageTitle !== '') {
+            return $pageTitle.' | '.$base;
+        }
 
-        return $pageTitle === '' ? $base : $pageTitle.' | '.$base;
+        $pattern = (string) ($this->config['seo']['title_pattern'] ?? '{name} — {agency} | {area}');
+        $title = strtr($pattern, [
+            '{name}' => $this->name,
+            '{agency}' => $this->agency(),
+            '{area}' => $this->areas[0] ?? '',
+            '{tagline}' => $this->tagline(),
+        ]);
+        // drop the separators an empty placeholder leaves behind ("Name —  | ")
+        $title = preg_replace('/\s*[—|·-](?=\s*[—|·-]|\s*$)/u', '', trim($title)) ?? $title;
+        $title = preg_replace('/\s{2,}/u', ' ', $title) ?? $title;
+
+        return trim($title, ' —|·-') !== '' ? trim($title, ' —|·-') : $base;
     }
 
     public function hasSection(string $key): bool
@@ -220,8 +238,118 @@ final class SiteContext
         ];
     }
 
+    /** The tenant's choice, unless the theme cannot render dark (manifest dark_capable: false). */
     public function darkMode(): string
     {
+        if (($this->manifest['dark_capable'] ?? true) === false) {
+            return 'off';
+        }
+
         return (string) ($this->config['branding']['dark_mode'] ?? 'auto');
+    }
+
+    /** The site's social image: seo.og_image, else the hero image, else the agent's photo (spec §16). */
+    public function ogImage(): ?string
+    {
+        foreach (['seo.og_image', 'branding.hero_image', 'identity.photo'] as $key) {
+            $value = (string) data_get($this->config, $key, '');
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /** A site-relative path (/media/…, /demo/…) as an absolute URL on the primary host. */
+    public function absoluteUrl(?string $path): ?string
+    {
+        if ($path === null || $path === '') {
+            return null;
+        }
+        if (preg_match('#^https?://#i', $path) === 1) {
+            return $path;
+        }
+
+        return 'https://'.$this->tenant->primaryHost().'/'.ltrim($path, '/');
+    }
+
+    /** /{default locale}/… for hreflang x-default. */
+    public function defaultLocaleUrl(string $path = ''): string
+    {
+        $default = (string) ($this->config['locale']['default'] ?? $this->locale);
+
+        return '/'.$default.($path === '' ? '' : '/'.ltrim($path, '/'));
+    }
+
+    /**
+     * schema.org RealEstateAgent (a LocalBusiness) for the home page (spec §16).
+     *
+     * @return array<string, mixed>
+     */
+    public function agentJsonLd(): array
+    {
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => ['RealEstateAgent', 'LocalBusiness'],
+            'name' => $this->name,
+            'url' => $this->canonical(),
+            'telephone' => $this->phone(),
+            'areaServed' => array_map(static fn (string $area): array => ['@type' => 'Place', 'name' => $area], $this->areas),
+            'knowsLanguage' => array_map('strval', (array) ($this->config['identity']['languages'] ?? [])),
+        ];
+        if ($this->agency() !== '') {
+            $data['parentOrganization'] = ['@type' => 'Organization', 'name' => $this->agency()];
+        }
+        if (($image = $this->absoluteUrl($this->ogImage())) !== null) {
+            $data['image'] = $image;
+        }
+        if (($address = (string) ($this->config['contact']['office_address'] ?? '')) !== '') {
+            $data['address'] = ['@type' => 'PostalAddress', 'streetAddress' => $address, 'addressCountry' => 'AE'];
+        }
+        if ($this->tagline() !== '') {
+            $data['description'] = $this->tagline();
+        }
+        $socials = array_values($this->socials());
+        if ($socials !== []) {
+            $data['sameAs'] = $socials;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Font files to preload for this locale (the Latin variable font; plus the Arabic 400 and
+     * 700 faces on Arabic pages), read from the Vite manifest of the theme's CSS entry, so the
+     * first paint already has the web font and nothing shifts when it arrives (Lighthouse CLS).
+     *
+     * @return list<string>
+     */
+    public function fontPreloads(): array
+    {
+        $manifestPath = public_path('build/manifest.json');
+        if (! is_file($manifestPath)) {
+            return [];
+        }
+        static $manifest = null;
+        $manifest ??= json_decode((string) file_get_contents($manifestPath), true);
+        /** @var list<string> $assets */
+        $assets = $manifest[$this->cssEntry]['assets'] ?? [];
+        $wanted = ['inter-latin-wght-normal'];
+        if ($this->locale === 'ar') {
+            $wanted[] = 'ibm-plex-sans-arabic-arabic-400-normal';
+            $wanted[] = 'ibm-plex-sans-arabic-arabic-700-normal';
+        }
+        $urls = [];
+        foreach ($wanted as $needle) {
+            foreach ($assets as $asset) {
+                if (str_ends_with($asset, '.woff2') && str_contains($asset, $needle)) {
+                    $urls[] = asset('build/'.$asset);
+                    break;
+                }
+            }
+        }
+
+        return $urls;
     }
 }
